@@ -2748,6 +2748,54 @@ async function loadSettings() {
         document.getElementById('set-force-update').value = (data.is_force_update || 0).toString();
         document.getElementById('set-app-link').value = data.app_link || '';
         document.getElementById('set-app-update-desc').value = data.app_update_desc || '';
+        document.getElementById('set-worker-domain').value = data.worker_domain || '';
+
+        // Worker connection tester logic
+        const testBtn = document.getElementById('btn-test-worker');
+        const workerInput = document.getElementById('set-worker-domain');
+        const badge = document.getElementById('worker-status-badge');
+
+        const testWorkerConnection = async (workerUrl) => {
+            if (!workerUrl || workerUrl.trim() === '') {
+                badge.textContent = 'No URL Provided';
+                badge.className = 'badge badge-warning text-dark';
+                return;
+            }
+            badge.textContent = 'Testing...';
+            badge.className = 'badge badge-info text-light';
+            try {
+                const cleanUrl = workerUrl.replace(/\/$/, '') + '/status';
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
+
+                const res = await fetch(cleanUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const statusData = await res.json();
+                
+                if (statusData && statusData.status === 'online') {
+                    badge.textContent = 'Online / Verified';
+                    badge.className = 'badge badge-success text-light';
+                } else {
+                    badge.textContent = 'Invalid Response';
+                    badge.className = 'badge badge-danger text-light';
+                }
+            } catch (err) {
+                badge.textContent = 'Offline / Error: ' + err.message;
+                badge.className = 'badge badge-danger text-light';
+            }
+        };
+
+        testBtn.onclick = (e) => {
+            e.preventDefault();
+            testWorkerConnection(workerInput.value);
+        };
+
+        // Auto-run verification check on load
+        if (data.worker_domain) {
+            testWorkerConnection(data.worker_domain);
+        }
 
         document.getElementById('setting-form').onsubmit = async (e) => {
             e.preventDefault();
@@ -2769,6 +2817,7 @@ async function loadSettings() {
                     is_force_update: parseInt(document.getElementById('set-force-update').value),
                     app_link: document.getElementById('set-app-link').value,
                     app_update_desc: document.getElementById('set-app-update-desc').value,
+                    worker_domain: document.getElementById('set-worker-domain').value,
                     
                     updated_at: new Date().toISOString()
                 };

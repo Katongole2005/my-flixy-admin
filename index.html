@@ -773,6 +773,18 @@
                                 <label class="form-label">What's New / Update Changelog</label>
                                 <textarea class="form-control" id="set-app-update-desc" rows="3" required placeholder="Describe what is new in the latest update..."></textarea>
                             </div>
+                            <div class="col-md-12 form-group">
+                                <label class="form-label">Link Masking Worker URL</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="set-worker-domain" placeholder="https://moviebay-stream.joel.workers.dev">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-info text-light" type="button" id="btn-test-worker">Test Worker Connection</button>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted mt-2">
+                                    Status: <span id="worker-status-badge" class="badge badge-secondary">Not Checked</span>
+                                </small>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary text-light px-4 mt-2">Save Settings</button>
                     </div>
