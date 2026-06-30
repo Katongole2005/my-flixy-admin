@@ -650,8 +650,8 @@ function showAddContentModal() {
                     </select>
                 </div>
                 <div class="col-md-4 form-group">
-                    <label>Release Year</label>
-                    <input type="number" class="form-control" id="add-c-year" value="2026" required>
+                    <label>Release Date</label>
+                    <input type="date" class="form-control" id="add-c-year" required>
                 </div>
                 <div class="col-md-4 form-group">
                     <label>Duration / Runtime</label>
@@ -708,14 +708,14 @@ function showAddContentModal() {
             const vPosterUrl = await uploadToSupabase(document.getElementById('add-c-v-poster'), 'posters');
             const hPosterUrl = await uploadToSupabase(document.getElementById('add-c-h-poster'), 'posters');
             const logoUrl = await uploadToSupabase(document.getElementById('add-c-logo'), 'posters');
-
+ 
             const genresChecked = Array.from(document.querySelectorAll('input[name="genres_checkbox"]:checked')).map(el => el.value).join(',');
-
+ 
             const insertData = {
                 title: document.getElementById('add-c-title').value,
                 description: document.getElementById('add-c-description').value,
                 type: parseInt(document.getElementById('add-c-type').value),
-                release_year: parseInt(document.getElementById('add-c-year').value),
+                release_year: document.getElementById('add-c-year').value || null,
                 duration: document.getElementById('add-c-duration').value || null,
                 ratings: parseFloat(document.getElementById('add-c-rating').value),
                 language_id: parseInt(document.getElementById('add-c-language').value),
@@ -769,8 +769,8 @@ async function showEditContentModal(id) {
                     </select>
                 </div>
                 <div class="col-md-4 form-group">
-                    <label>Release Year</label>
-                    <input type="number" class="form-control" id="edit-c-year" value="${item.release_year}" required>
+                    <label>Release Date</label>
+                    <input type="date" class="form-control" id="edit-c-year" value="${item.release_year || ''}" required>
                 </div>
                 <div class="col-md-4 form-group">
                     <label>Duration / Runtime</label>
@@ -837,7 +837,7 @@ async function showEditContentModal(id) {
                 title: document.getElementById('edit-c-title').value,
                 description: document.getElementById('edit-c-description').value,
                 type: parseInt(document.getElementById('edit-c-type').value),
-                release_year: parseInt(document.getElementById('edit-c-year').value),
+                release_year: document.getElementById('edit-c-year').value || null,
                 duration: document.getElementById('edit-c-duration').value || null,
                 ratings: parseFloat(document.getElementById('edit-c-rating').value),
                 language_id: parseInt(document.getElementById('edit-c-language').value),
