@@ -4,7 +4,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// State variables
+// State
 let currentTab = 'index';
 let cachedGenres = [];
 let cachedLanguages = [];
@@ -17,11 +17,15 @@ const loginForm = document.getElementById('login-form');
 const loginError = document.getElementById('login-error');
 const logoutBtn = document.getElementById('logout-btn');
 
-// Modal Elements
-const staticModal = document.getElementById('static-modal');
-const staticModalTitle = document.getElementById('static-modal-title');
-const staticModalBody = document.getElementById('static-modal-body');
-const staticModalCloseBtn = document.getElementById('static-modal-close-btn');
+// Modal Elements (matching new index.html IDs)
+const staticModal = document.getElementById('flixy-modal');
+const staticModalTitle = document.getElementById('flixy-modal-title');
+const staticModalBody = document.getElementById('flixy-modal-body');
+const staticModalCloseBtn = document.getElementById('flixy-modal-close');
+
+// Also alias for backward-compat references inside modal bodies
+const modalTitle = staticModalTitle;
+const modalBody = staticModalBody;
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
@@ -39,26 +43,24 @@ function checkSession() {
 }
 
 function showLogin() {
-    loginContainer.style.display = 'block';
+    loginContainer.style.display = 'flex';
     dashboardContainer.style.display = 'none';
+    document.getElementById('global-loader').style.display = 'none';
 }
 
 function showDashboard() {
     loginContainer.style.display = 'none';
     dashboardContainer.style.display = 'block';
-    
-    // Set logged in username
-    const session = JSON.parse(localStorage.getItem('flixy_admin_session') || '{}');
-    document.getElementById('nav-admin-username').textContent = session.user_name || 'Admin';
+    document.getElementById('global-loader').style.display = 'none';
 
     // Switch to active tab
     switchTab(currentTab);
     loadGlobalCache();
     
-    // Initialise feather icons
-    if (window.feather) {
-        window.feather.replace();
-    }
+    // Initialise feather icons after a short delay
+    setTimeout(() => {
+        if (window.feather) window.feather.replace();
+    }, 100);
 }
 
 async function loadGlobalCache() {
@@ -102,28 +104,33 @@ function setupEventListeners() {
     });
 
     // Logout
-    logoutBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        localStorage.removeItem('flixy_admin_session');
-        showLogin();
-    });
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('flixy_admin_session');
+            showLogin();
+        });
+    }
 
-    // Sidebar tab routing
+    // Sidebar tab routing — use .activeLi (matches original CSS)
     document.querySelectorAll('.sidebar-menu li[data-tab]').forEach(li => {
         li.addEventListener('click', (e) => {
             e.preventDefault();
-            document.querySelectorAll('.sidebar-menu li').forEach(el => el.classList.remove('active'));
-            li.classList.add('active');
+            document.querySelectorAll('.sidebar-menu li').forEach(el => el.classList.remove('activeLi'));
+            li.classList.add('activeLi');
             switchTab(li.dataset.tab);
         });
     });
 
     // Modal Close
-    staticModalCloseBtn.addEventListener('click', hideModal);
+    if (staticModalCloseBtn) staticModalCloseBtn.addEventListener('click', hideModal);
     
-    // Filters inside content tab
-    document.getElementById('search-content').addEventListener('input', () => loadContents());
-    document.getElementById('filter-content-type').addEventListener('change', () => loadContents());
+    // Close modal when clicking outside
+    if (staticModal) {
+        staticModal.addEventListener('click', (e) => {
+            if (e.target === staticModal) hideModal();
+        });
+    }
 }
 
 function switchTab(tabId) {
@@ -144,7 +151,9 @@ function switchTab(tabId) {
             loadUsers();
             break;
         case 'contentList':
-            loadContents();
+            loadMovies();
+            loadSeries();
+            loadContentCounts();
             document.getElementById('btn-add-content').onclick = () => showAddContentModal();
             break;
         case 'mediaGallery':
@@ -239,15 +248,53 @@ async function uploadToSupabase(fileInput, bucketPath) {
 // ==========================================
 async function loadDashboardStats() {
     try {
-        const { count: movies } = await _supabase.from('contents').select('*', { count: 'exact', head: true }).eq('type', 0);
-        const { count: series } = await _supabase.from('contents').select('*', { count: 'exact', head: true }).eq('type', 1);
-        const { count: channels } = await _supabase.from('tv_channels').select('*', { count: 'exact', head: true });
-        const { count: users } = await _supabase.from('users').select('*', { count: 'exact', head: true });
+        const [{ count: movies }, { count: series }, { count: actors }, { count: genres },
+               { count: languages }, { count: tvCats }, { count: tvChannels },
+               { count: notifications }, { count: admob }, { count: customAds }, { count: users }] = await Promise.all([
+            _supabase.from('contents').select('*', { count: 'exact', head: true }).eq('type', 0),
+            _supabase.from('contents').select('*', { count: 'exact', head: true }).eq('type', 1),
+            _supabase.from('actors').select('*', { count: 'exact', head: true }),
+            _supabase.from('genres').select('*', { count: 'exact', head: true }),
+            _supabase.from('languages').select('*', { count: 'exact', head: true }),
+            _supabase.from('tv_categories').select('*', { count: 'exact', head: true }),
+            _supabase.from('tv_channels').select('*', { count: 'exact', head: true }),
+            _supabase.from('notifications').select('*', { count: 'exact', head: true }),
+            _supabase.from('admob').select('*', { count: 'exact', head: true }),
+            _supabase.from('custom_ads').select('*', { count: 'exact', head: true }),
+            _supabase.from('users').select('*', { count: 'exact', head: true }),
+        ]);
 
-        document.getElementById('dash-total-movies').textContent = movies || 0;
-        document.getElementById('dash-total-series').textContent = series || 0;
-        document.getElementById('dash-total-channels').textContent = channels || 0;
-        document.getElementById('dash-total-users').textContent = users || 0;
+        // Render original dashboard-blog cards
+        const cards = [
+            { icon: 'users', count: users || 0, label: 'Users', tab: 'users' },
+            { icon: 'video', count: (movies || 0) + (series || 0), label: 'Contents', tab: 'contentList' },
+            { icon: 'star', count: actors || 0, label: 'Actors', tab: 'actors' },
+            { icon: 'package', count: genres || 0, label: 'Genres', tab: 'genres' },
+            { icon: 'globe', count: languages || 0, label: 'Languages', tab: 'languages' },
+            { icon: 'cast', count: tvCats || 0, label: 'Live TV Categories', tab: 'liveTvCategories' },
+            { icon: 'airplay', count: tvChannels || 0, label: 'Live TV Channels', tab: 'liveTvChannels' },
+            { icon: 'bell', count: notifications || 0, label: 'Notifications', tab: 'notification' },
+            { icon: 'activity', count: admob || 0, label: 'Admob', tab: 'admob' },
+            { icon: 'fast-forward', count: customAds || 0, label: 'Custom Ads', tab: 'customAds' },
+            { icon: 'settings', count: '', label: 'Settings', tab: 'setting' },
+        ];
+
+        const container = document.getElementById('dash-cards');
+        container.innerHTML = cards.map(c => `
+            <div class="dashboard-blog" style="cursor:pointer" onclick="switchTab('${c.tab}');document.querySelectorAll('.sidebar-menu li').forEach(el=>el.classList.remove('activeLi'));document.querySelector('[data-tab=${c.tab}]')?.classList.add('activeLi');">
+                <div class="dashboard-blog-content">
+                    <div class="card-icon">
+                        <i data-feather="${c.icon}"></i>
+                    </div>
+                    <div class="dashboard-blog-content-top">
+                        <p>${c.count}</p>
+                        <a href="#">${c.label} <i data-feather="arrow-up-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        setTimeout(() => { if (window.feather) window.feather.replace(); }, 50);
     } catch (e) {
         console.error("Dashboard stats error:", e);
     }
@@ -291,81 +338,90 @@ async function loadUsers() {
     }
 }
 
-// ==========================================
+// // ==========================================
 // SECTION 3: CONTENT (MOVIES & SERIES)
 // ==========================================
-async function loadContents() {
-    const listBody = document.getElementById('content-list-body');
-    listBody.innerHTML = `<tr><td colspan="8" class="text-center">Loading content list...</td></tr>`;
-
-    const keyword = document.getElementById('search-content').value.trim();
-    const typeVal = document.getElementById('filter-content-type').value;
-
+async function loadContentCounts() {
     try {
-        let query = _supabase.from('contents').select('*');
-        if (keyword) {
-            query = query.or(`title.ilike.%${keyword}%,description.ilike.%${keyword}%`);
-        }
-        if (typeVal !== 'all') {
-            query = query.eq('type', parseInt(typeVal));
-        }
+        const [{ count: movies }, { count: series }] = await Promise.all([
+            _supabase.from('contents').select('*', { count: 'exact', head: true }).eq('type', 0),
+            _supabase.from('contents').select('*', { count: 'exact', head: true }).eq('type', 1),
+        ]);
+        const m = movies || 0, s = series || 0;
+        document.getElementById('count-movies').textContent = m;
+        document.getElementById('count-series').textContent = s;
+        document.getElementById('count-all').textContent = m + s;
+    } catch (e) { console.error(e); }
+}
 
-        const { data, error } = await query.order('id', { ascending: false });
+function buildContentRows(data, isMovie) {
+    if (!data || data.length === 0) {
+        const cols = 8;
+        return `<tr><td colspan="${cols}" class="text-center">No ${isMovie ? 'movies' : 'series'} found.</td></tr>`;
+    }
+    return data.map(item => {
+        const VJ = cachedLanguages.find(l => l.id == item.language_id)?.title || 'N/A';
+        const isFeaturedChecked = item.is_featured === 1 ? 'checked' : '';
+        const isShowChecked = item.is_show === 1 ? 'checked' : '';
+        return `
+            <tr>
+                <td><img src="${item.vertical_poster || ''}" class="thumb" onerror="this.src='./assets/img/placeholder-image.png'"></td>
+                <td><strong>${escapeHtml(item.title)}</strong></td>
+                <td>${item.ratings || '0.0'}</td>
+                <td>${item.release_year}</td>
+                <td>${escapeHtml(VJ)}</td>
+                <td>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="feat-${item.id}" ${isFeaturedChecked} onchange="toggleContentFeatured(${item.id}, ${item.is_featured})">
+                    </div>
+                </td>
+                <td>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="show-${item.id}" ${isShowChecked} onchange="toggleContentShow(${item.id}, ${item.is_show})">
+                    </div>
+                </td>
+                <td class="text-end">
+                    <div class="d-flex justify-content-end gap-1">
+                        <button class="btn btn-sm btn-primary text-light" onclick="showEditContentModal(${item.id})"><i class="fas fa-edit"></i></button>
+                        ${isMovie
+                            ? `<button class="btn btn-sm btn-success text-light" onclick="manageMovieSources(${item.id}, '${escapeHtml(item.title)}')" title="Sources"><i class="fas fa-link"></i></button>`
+                            : `<button class="btn btn-sm btn-success text-light" onclick="manageSeasons(${item.id}, '${escapeHtml(item.title)}')" title="Seasons"><i class="fas fa-folder-open"></i></button>`
+                        }
+                        <button class="btn btn-sm btn-info text-light" onclick="manageMovieSubtitles(${item.id}, '${escapeHtml(item.title)}')" title="Subtitles"><i class="fas fa-closed-captioning"></i></button>
+                        <button class="btn btn-sm btn-secondary text-light" onclick="manageMovieCast(${item.id}, '${escapeHtml(item.title)}')" title="Cast"><i class="fas fa-user-plus"></i></button>
+                        <button class="btn btn-sm btn-danger text-light" onclick="deleteContent(${item.id})"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+    }).join('');
+}
+
+async function loadMovies() {
+    const listBody = document.getElementById('movies-list-body');
+    listBody.innerHTML = `<tr><td colspan="8" class="text-center">Loading movies...</td></tr>`;
+    try {
+        const { data, error } = await _supabase.from('contents').select('*').eq('type', 0).order('release_year', { ascending: false });
         if (error) throw error;
-
-        if (!data || data.length === 0) {
-            listBody.innerHTML = `<tr><td colspan="8" class="text-center">No content matches.</td></tr>`;
-            return;
-        }
-
-        listBody.innerHTML = '';
-        data.forEach(item => {
-            const VJ = cachedLanguages.find(l => l.id == item.language_id)?.title || 'N/A';
-            const typeBadge = item.type === 1 ? '<span class="badge badge-warning">Series</span>' : '<span class="badge badge-info">Movie</span>';
-            const isFeaturedChecked = item.is_featured === 1 ? 'checked' : '';
-            const isShowChecked = item.is_show === 1 ? 'checked' : '';
-
-            listBody.innerHTML += `
-                <tr>
-                    <td><img src="${item.vertical_poster || 'placeholder.jpg'}" class="rounded" width="40" height="55" onerror="this.src='./assets/img/placeholder-image.png'"></td>
-                    <td>
-                        <strong>${escapeHtml(item.title)}</strong>
-                        <div style="font-size:0.75rem; color:#888;">Rating: ${item.ratings || '0.0'}</div>
-                    </td>
-                    <td>${typeBadge}</td>
-                    <td>${item.release_year}</td>
-                    <td>${VJ}</td>
-                    <td>
-                        <div class="custom-control custom-switch">
-                            <input type="checkbox" class="custom-control-input" id="featSwitch-${item.id}" ${isFeaturedChecked} onchange="toggleContentFeatured(${item.id}, ${item.is_featured})">
-                            <label class="custom-control-label" for="featSwitch-${item.id}"></label>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="custom-control custom-switch">
-                            <input type="checkbox" class="custom-control-input" id="showSwitch-${item.id}" ${isShowChecked} onchange="toggleContentShow(${item.id}, ${item.is_show})">
-                            <label class="custom-control-label" for="showSwitch-${item.id}"></label>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="btn-group">
-                            <button class="btn btn-sm btn-outline-primary" onclick="showEditContentModal(${item.id})"><i class="fa fa-edit"></i></button>
-                            ${item.type === 0 
-                                ? `<button class="btn btn-sm btn-outline-success" title="Sources" onclick="manageMovieSources(${item.id}, '${escapeHtml(item.title)}')"><i class="fa fa-link"></i></button>`
-                                : `<button class="btn-sm btn btn-outline-success" title="Seasons & Episodes" onclick="manageSeasons(${item.id}, '${escapeHtml(item.title)}')"><i class="fa fa-folder-open"></i></button>`
-                            }
-                            <button class="btn btn-sm btn-outline-info" title="Subtitles" onclick="manageMovieSubtitles(${item.id}, '${escapeHtml(item.title)}')"><i class="fa fa-cc"></i></button>
-                            <button class="btn btn-sm btn-outline-dark" title="Cast" onclick="manageMovieCast(${item.id}, '${escapeHtml(item.title)}')"><i class="fa fa-user-plus"></i></button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteContent(${item.id})"><i class="fa fa-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        });
+        listBody.innerHTML = buildContentRows(data, true);
     } catch (e) {
         listBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Error: ${e.message}</td></tr>`;
     }
 }
+
+async function loadSeries() {
+    const listBody = document.getElementById('series-list-body');
+    listBody.innerHTML = `<tr><td colspan="8" class="text-center">Loading series...</td></tr>`;
+    try {
+        const { data, error } = await _supabase.from('contents').select('*').eq('type', 1).order('release_year', { ascending: false });
+        if (error) throw error;
+        listBody.innerHTML = buildContentRows(data, false);
+    } catch (e) {
+        listBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Error: ${e.message}</td></tr>`;
+    }
+}
+
+// Keep loadContents as a passthrough for compatibility
+async function loadContents() { await loadMovies(); await loadSeries(); }
 
 async function toggleContentFeatured(id, val) {
     const newVal = val === 1 ? 0 : 1;

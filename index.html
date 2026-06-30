@@ -4,167 +4,125 @@
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
     <title>Flixy Admin</title>
-    <!-- Favicon -->
-    <link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.png" style="width: 2px !important;" />
-    
-    <!-- Template CSS files -->
+    <link rel='shortcut icon' type='image/x-icon' href="assets/img/favicon.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="assets/css/iziToast.css" type="text/css" />
     <link rel="stylesheet" href="assets/css/flatpickr.min.css" type="text/css" />
-    <link rel="stylesheet" href="assets/css/fancybox.css" type="text/css" />
     <link rel="stylesheet" href="assets/css/style.css">
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- FontAwesome for additional icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-fontawesome/6.4.0/css/all.min.css">
-    
-    <!-- Supabase Client JS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- Feather Icons CDN -->
     <script src="https://unpkg.com/feather-icons"></script>
-    
-    <!-- Custom styling for static single-page-app transitions -->
     <style>
-        .tab-section {
+        /* SPA tab visibility */
+        .tab-section { display: none; }
+        .tab-section.active { display: block; }
+
+        /* Full-screen overlay modal */
+        .flixy-modal-overlay {
             display: none;
-        }
-        .tab-section.active {
-            display: block;
-        }
-        .login-page {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #f4f6f9;
-        }
-        .session-message {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
             z-index: 9999;
-            background: #fff;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border-radius: 4px;
-            padding: 10px 15px;
-            border-left: 4px solid #ef4444;
-        }
-        .sidebar-menu hr {
-            border-top: 1px solid rgba(0, 0, 0, 0.08);
-            margin: 15px 20px;
-        }
-        /* Custom modal handling because of static page */
-        .static-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1050;
-            display: none;
             overflow-y: auto;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
         }
-        .static-modal.show {
-            display: flex;
-        }
-        .static-modal-content {
-            background: #fff;
-            border-radius: 8px;
+        .flixy-modal-overlay.show { display: flex; align-items: flex-start; justify-content: center; padding: 60px 20px; }
+        .flixy-modal-box {
+            background: var(--theme-dark);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
             width: 100%;
-            max-width: 720px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            animation: slideDown 0.3s ease-out;
+            max-width: 820px;
+            animation: slideDown 0.25s ease-out;
         }
-        .static-modal-header {
+        .flixy-modal-header {
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            border-bottom: 1px solid #e9ecef;
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
         }
-        .static-modal-body {
-            padding: 20px;
-            max-height: 70vh;
-            overflow-y: auto;
+        .flixy-modal-header::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            height: 26px;
+            width: 4px;
+            background: var(--theme-color);
+            top: 50%;
+            transform: translateY(-50%);
+            border-radius: 0 10px 10px 0;
         }
-        .static-modal-footer {
-            padding: 15px 20px;
-            border-top: 1px solid #e9ecef;
+        .flixy-modal-body { padding: 25px; max-height: 70vh; overflow-y: auto; }
+        .flixy-modal-close { background: none; border: none; color: #fff; font-size: 1.6rem; cursor: pointer; line-height: 1; }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Dashboard section header */
+        .section-header {
             display: flex;
-            justify-content: flex-end;
-            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 20px 0 10px 0;
         }
-        .static-modal-close {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #6c757d;
-        }
-        .static-modal-close:hover {
-            color: #343a40;
-        }
-        @keyframes slideDown {
-            from { transform: translateY(-30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        /* Small fixes to original CSS elements */
-        .logo-name {
-            font-weight: 600;
-            font-size: 1.3rem;
-            color: #5a5c69;
-        }
-        .sidebar-menu li.active a {
-            color: #6777ef;
-            background-color: #f8f9fa;
-        }
-        .sidebar-menu li.active a i {
-            color: #6777ef;
+        .section-header h1 { font-size: 24px; font-weight: 700; color: #fff; margin: 0; }
+
+        /* Login-specific container */
+        #login-container { display: flex; }
+        #dashboard-container { display: none; }
+
+        /* Table img thumbnail */
+        table img.thumb { width: 40px; height: 55px; object-fit: cover; border-radius: 6px; }
+        table img.thumb-circle { width: 40px; height: 40px; object-fit: cover; border-radius: 50%; }
+
+        /* Scrollable sidebar */
+        #sidebar-wrapper { overflow-y: auto; max-height: calc(100vh - 70px); padding-bottom: 30px; }
+
+        /* Force active style using .activeLi (matches original CSS) */
+        .sidebar-menu li.activeLi > a { 
+            background: var(--theme-color) !important; 
+            color: #fff !important; 
+            border-radius: var(--border-radius); 
         }
     </style>
 </head>
-<body class="light">
+<body>
 
-    <!-- Loader Background -->
-    <div class="loader-bg" id="global-loader" style="display: none;">
-        <div class="loader"></div>
-    </div>
+<!-- ===================== LOADER ===================== -->
+<div class="loader-bg" id="global-loader">
+    <div class="loader"></div>
+</div>
 
-    <!-- Login Container -->
-    <div id="login-container" class="login-page">
+<!-- ===================== LOGIN PAGE ===================== -->
+<div id="login-container">
+    <div class="login-page w-100">
         <div class="container">
             <div class="row align-items-center justify-content-center">
-                <div class="col-lg-5 col-md-5 col-sm-12">
+                <div class="col-lg-5 col-md-6 col-sm-12">
                     <div class="login-box">
                         <div class="text-center mb-4">
-                            <h3 style="color:#6777ef; font-weight:700; letter-spacing:1px;">FLIXY ADMIN</h3>
+                            <a href="#" style="font-size:28px; font-weight:700; letter-spacing:2px; color:var(--theme-color);">FLIXY</a>
                         </div>
-                        <div class="card login-card shadow-sm">
+                        <div class="card login-card">
                             <div class="card-header">
                                 <h4>Log In</h4>
                             </div>
                             <div class="card-body">
                                 <form id="login-form">
-                                    <div class="login-form">
-                                        <div class="mb-4 form-group">
-                                            <label for="user_name" class="form-label">Username</label>
-                                            <input name="user_name" type="text" class="form-control" required id="user_name">
-                                        </div>
-                                        <div class="mb-4 form-group">
-                                            <label for="user_password" class="form-label">Password</label>
-                                            <input name="user_password" type="password" class="form-control" required id="user_password">
-                                        </div>
-                                        <div class="error-msg text-danger text-center mb-3" id="login-error" style="font-weight:500;"></div>
-                                        <button type="submit" class="btn btn-primary btn-block text-white" style="background:#6777ef; border:none; padding:10px;">
-                                            Log In
-                                        </button>
+                                    <div class="form-group">
+                                        <label class="form-label">Username</label>
+                                        <input name="user_name" type="text" class="form-control" required id="user_name" placeholder="Enter username">
                                     </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Password</label>
+                                        <input name="user_password" type="password" class="form-control" required id="user_password" placeholder="Enter password">
+                                    </div>
+                                    <p class="text-danger text-center" id="login-error" style="font-size:14px;"></p>
+                                    <button type="submit" class="btn theme-btn w-100 mt-3 text-dark fw-bold" style="color:#000 !important;">
+                                        Log In
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -173,611 +131,609 @@
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Main Dashboard Container -->
-    <div id="dashboard-container" class="main-wrapper main-wrapper-1" style="display: none;">
-        <div class="navbar-bg"></div>
-        <nav class="navbar navbar-expand-lg main-navbar sticky">
-            <div class="form-inline mr-auto">
-                <ul class="navbar-nav mr-3">
-                    <li>
-                        <a href="#" data-toggle="sidebar" class="nav-link nav-link-lg collapse-btn">
-                            <i data-feather="menu"></i>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            <ul class="navbar-nav navbar-right">
-                <li class="dropdown">
-                    <a href="#" data-toggle="dropdown" class="nav-link dropdown-toggle nav-link-lg nav-link-user">
-                        <span class="profile-btn" style="background:#f2f2f2; padding:8px 12px; border-radius:50px; color:#555;">
-                            <i data-feather="user" style="width:16px; height:16px; vertical-align:middle; margin-right:4px;"></i>
-                            <span style="font-size:0.9rem; font-weight:500;" id="nav-admin-username">Admin</span>
-                        </span>
+<!-- ===================== DASHBOARD ===================== -->
+<div id="dashboard-container">
+    <div class="navbar-bg"></div>
+    <nav class="navbar navbar-expand-lg main-navbar sticky">
+        <div class="form-inline mr-auto">
+            <ul class="navbar-nav mr-3">
+                <li>
+                    <a href="#" data-toggle="sidebar" class="nav-link nav-link-lg collapse-btn">
+                        <i data-feather="menu"></i>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-right">
-                        <a href="#" id="logout-btn" class="dropdown-item has-icon text-danger">
-                            <i data-feather="log-out"></i>
-                            Logout
-                        </a>
-                    </div>
                 </li>
             </ul>
-        </nav>
-
-        <!-- Sidebar Wrapper -->
-        <div class="main-sidebar sidebar-style-2">
-            <div class="sidebar-brand">
-                <a href="#">
-                    <span class="logo-name">FLIXY</span>
-                    <span class="logo-name-small">FX</span>
-                </a>
-            </div>
-            <aside id="sidebar-wrapper">
-                <ul class="sidebar-menu">
-                    <li class="sideBarli indexSideA active" data-tab="index">
-                        <a href="#" class="nav-link">
-                            <i data-feather="home"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li class="sideBarli userSideA" data-tab="users">
-                        <a href="#" class="nav-link">
-                            <i data-feather="users"></i>
-                            <span>Users</span>
-                        </a>
-                    </li>
-                    <li class="sideBarli contentSideA" data-tab="contentList">
-                        <a href="#" class="nav-link">
-                            <i data-feather="video"></i>
-                            <span>Content</span>
-                        </a>
-                    </li>
-                    <li class="sideBarli mediaGallerySideA" data-tab="mediaGallery">
-                        <a href="#" class="nav-link">
-                            <i data-feather="hard-drive"></i>
-                            <span>Media Gallery</span>
-                        </a>
-                    </li>
-                    <li class="sideBarli topContentsSideA" data-tab="topContents">
-                        <a href="#" class="nav-link">
-                            <i data-feather="trending-up"></i>
-                            <span>Top Contents</span>
-                        </a>
-                    </li>
-                    <li class="sideBarli actorSideA" data-tab="actors">
-                        <a href="#" class="nav-link">
-                            <i data-feather="star"></i>
-                            <span>Actors</span>
-                        </a>
-                    </li>
-                    <li class="sideBarli genreSideA" data-tab="genres">
-                        <a href="#" class="nav-link">
-                            <i data-feather="package"></i>
-                            <span>Genres</span>
-                        </a>
-                    </li>
-                    <li class="sideBarli languageSideA" data-tab="languages">
-                        <a href="#" class="nav-link">
-                            <i data-feather="globe"></i>
-                            <span>Languages</span>
-                        </a>
-                    </li>
-                    <li class="sideBarli liveTvCategorySideA" data-tab="liveTvCategories">
-                        <a href="#" class="nav-link">
-                            <i data-feather="cast"></i>
-                            <span>Live TV Categories</span>
-                        </a>
-                    </li>
-                    <li class="sideBarli liveTvChannelSideA" data-tab="liveTvChannels">
-                        <a href="#" class="nav-link">
-                            <i data-feather="airplay"></i>
-                            <span>Live TV Channels</span>
-                        </a>
-                    </li>
-                    <li class="sideBarli notificationSideA" data-tab="notification">
-                        <a href="#" class="nav-link">
-                            <i data-feather="bell"></i>
-                            <span>Notification</span>
-                        </a>
-                    </li>
-                    <li class="sideBarli admobSideA" data-tab="admob">
-                        <a href="#" class="nav-link">
-                            <i data-feather="activity"></i>
-                            <span>Admob</span>
-                        </a>
-                    </li>
-                    <li class="sideBarli customAdSideA" data-tab="customAds">
-                        <a href="#" class="nav-link">
-                            <i data-feather="fast-forward"></i>
-                            <span>Custom Ads</span>
-                        </a>
-                    </li>
-                    <li class="sideBarli settingSideA" data-tab="setting">
-                        <a href="#" class="nav-link">
-                            <i data-feather="settings"></i>
-                            <span>Setting</span>
-                        </a>
-                    </li>
-                    <hr>
-                    <li class="sideBarli privacySideA" data-tab="viewPrivacy">
-                        <a href="#" class="nav-link">
-                            <i data-feather="shield"></i>
-                            <span>Privacy Policy</span>
-                        </a>
-                    </li>
-                    <li class="sideBarli termsSideA" data-tab="viewTerms">
-                        <a href="#" class="nav-link">
-                            <i data-feather="clipboard"></i>
-                            <span>Terms of Use</span>
-                        </a>
-                    </li>
-                </ul>
-            </aside>
         </div>
+        <ul class="navbar-nav navbar-right">
+            <li class="dropdown">
+                <a href="#" data-toggle="dropdown" class="nav-link dropdown-toggle nav-link-lg nav-link-user">
+                    <span class="profile-btn">
+                        <i data-feather="user" style="width:20px;height:20px;"></i>
+                    </span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <a href="#" id="logout-btn" class="dropdown-item has-icon text-danger">
+                        <i data-feather="log-out" style="width:16px;height:16px;margin-right:8px;"></i>
+                        Logout
+                    </a>
+                </div>
+            </li>
+        </ul>
+    </nav>
 
-        <!-- Main Content Area -->
-        <div class="main-content">
-            <!-- TAB: Dashboard (Index) -->
-            <section id="tab-index" class="tab-section active">
-                <div class="section-header" style="justify-content:space-between;">
-                    <h1>Dashboard</h1>
-                </div>
-                <div class="row">
-                    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
-                        <div class="card card-statistic-1">
-                            <div class="card-icon bg-primary"><i class="fas fa-video"></i></div>
-                            <div class="card-wrap">
-                                <div class="card-header"><h4>Total Movies</h4></div>
-                                <div class="card-body" id="dash-total-movies">0</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
-                        <div class="card card-statistic-1">
-                            <div class="card-icon bg-danger"><i class="fas fa-tv"></i></div>
-                            <div class="card-wrap">
-                                <div class="card-header"><h4>Total Series</h4></div>
-                                <div class="card-body" id="dash-total-series">0</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
-                        <div class="card card-statistic-1">
-                            <div class="card-icon bg-warning"><i class="fas fa-list"></i></div>
-                            <div class="card-wrap">
-                                <div class="card-header"><h4>TV Channels</h4></div>
-                                <div class="card-body" id="dash-total-channels">0</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
-                        <div class="card card-statistic-1">
-                            <div class="card-icon bg-success"><i class="fas fa-users"></i></div>
-                            <div class="card-wrap">
-                                <div class="card-header"><h4>Total Users</h4></div>
-                                <div class="card-body" id="dash-total-users">0</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header"><h4>Welcome</h4></div>
-                            <div class="card-body">
-                                <h5>Welcome to the Flixy Static Admin Panel!</h5>
-                                <p class="text-muted">You are connected directly to Supabase. All media files uploaded through this dashboard are hosted securely on your Supabase Storage bucket.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+    <!-- SIDEBAR -->
+    <div class="main-sidebar sidebar-style-2">
+        <div class="sidebar-brand">
+            <a href="#" onclick="switchTab('index')">
+                <span class="logo-name" style="color:var(--theme-color);font-weight:700;font-size:22px;letter-spacing:2px;">FLIXY</span>
+            </a>
+        </div>
+        <aside id="sidebar-wrapper">
+            <ul class="sidebar-menu">
+                <li class="sideBarli activeLi" data-tab="index">
+                    <a href="#" class="nav-link">
+                        <i data-feather="home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="sideBarli" data-tab="users">
+                    <a href="#" class="nav-link">
+                        <i data-feather="users"></i>
+                        <span>Users</span>
+                    </a>
+                </li>
+                <li class="sideBarli" data-tab="contentList">
+                    <a href="#" class="nav-link">
+                        <i data-feather="video"></i>
+                        <span>Content</span>
+                    </a>
+                </li>
+                <li class="sideBarli" data-tab="mediaGallery">
+                    <a href="#" class="nav-link">
+                        <i data-feather="hard-drive"></i>
+                        <span>Media Gallery</span>
+                    </a>
+                </li>
+                <li class="sideBarli" data-tab="topContents">
+                    <a href="#" class="nav-link">
+                        <i data-feather="trending-up"></i>
+                        <span>Top Contents</span>
+                    </a>
+                </li>
+                <li class="sideBarli" data-tab="actors">
+                    <a href="#" class="nav-link">
+                        <i data-feather="star"></i>
+                        <span>Actors</span>
+                    </a>
+                </li>
+                <li class="sideBarli" data-tab="genres">
+                    <a href="#" class="nav-link">
+                        <i data-feather="package"></i>
+                        <span>Genres</span>
+                    </a>
+                </li>
+                <li class="sideBarli" data-tab="languages">
+                    <a href="#" class="nav-link">
+                        <i data-feather="globe"></i>
+                        <span>Languages</span>
+                    </a>
+                </li>
+                <li class="sideBarli" data-tab="liveTvCategories">
+                    <a href="#" class="nav-link">
+                        <i data-feather="cast"></i>
+                        <span>Live TV Categories</span>
+                    </a>
+                </li>
+                <li class="sideBarli" data-tab="liveTvChannels">
+                    <a href="#" class="nav-link">
+                        <i data-feather="airplay"></i>
+                        <span>Live TV Channels</span>
+                    </a>
+                </li>
+                <li class="sideBarli" data-tab="notification">
+                    <a href="#" class="nav-link">
+                        <i data-feather="bell"></i>
+                        <span>Notification</span>
+                    </a>
+                </li>
+                <li class="sideBarli" data-tab="admob">
+                    <a href="#" class="nav-link">
+                        <i data-feather="activity"></i>
+                        <span>Admob</span>
+                    </a>
+                </li>
+                <li class="sideBarli" data-tab="customAds">
+                    <a href="#" class="nav-link">
+                        <i data-feather="fast-forward"></i>
+                        <span>Custom Ads</span>
+                    </a>
+                </li>
+                <li class="sideBarli" data-tab="setting">
+                    <a href="#" class="nav-link">
+                        <i data-feather="settings"></i>
+                        <span>Setting</span>
+                    </a>
+                </li>
+                <li style="border-top:1px solid var(--border-color);margin:10px 0!important;padding:0!important;"></li>
+                <li class="sideBarli" data-tab="viewPrivacy">
+                    <a href="#" class="nav-link">
+                        <i data-feather="shield"></i>
+                        <span>Privacy Policy</span>
+                    </a>
+                </li>
+                <li class="sideBarli" data-tab="viewTerms">
+                    <a href="#" class="nav-link">
+                        <i data-feather="clipboard"></i>
+                        <span>Terms of Use</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+    </div>
 
-            <!-- TAB: Users -->
-            <section id="tab-users" class="tab-section">
-                <div class="section-header"><h1>Users</h1></div>
+    <!-- MAIN CONTENT AREA -->
+    <div class="main-content">
+
+        <!-- ── TAB: DASHBOARD ── -->
+        <section id="tab-index" class="tab-section section active">
+            <div class="section-header">
+                <h1>Dashboard</h1>
+            </div>
+            <div class="dashboard-cards" id="dash-cards">
+                <!-- Loaded via JS -->
+            </div>
+        </section>
+
+        <!-- ── TAB: USERS ── -->
+        <section id="tab-users" class="tab-section section">
+            <div class="section-header">
+                <h1>Users</h1>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h4>All Registered Users</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped w-100">
+                            <thead>
+                                <tr>
+                                    <th>Avatar</th>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Login Type</th>
+                                    <th>Platform</th>
+                                    <th>Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── TAB: CONTENT ── -->
+        <section id="tab-contentList" class="tab-section section">
+            <div class="section-header">
+                <h1>Content List</h1>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-primary text-light px-4" id="btn-add-content">Add Content</button>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-xl-3 col-lg-3 col-md-4 col-sm-12">
+                    <div class="card">
+                        <div class="card-header border-0 d-flex align-items-center justify-content-between">
+                            <h4 class="mb-0 fw-semibold">All</h4>
+                            <h4 class="badge badge-primary mb-0 fw-semibold px-4" id="count-all">0</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-3 col-md-4 col-sm-12">
+                    <div class="card">
+                        <div class="card-header border-0 d-flex align-items-center justify-content-between">
+                            <h4 class="mb-0 fw-semibold">Movies</h4>
+                            <h4 class="badge badge-primary mb-0 fw-semibold px-4" id="count-movies">0</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-3 col-md-4 col-sm-12">
+                    <div class="card">
+                        <div class="card-header border-0 d-flex align-items-center justify-content-between">
+                            <h4 class="mb-0 fw-semibold">Series</h4>
+                            <h4 class="badge badge-primary mb-0 fw-semibold px-4" id="count-series">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="page-title w-100">
+                        <div class="d-block d-xl-flex align-items-center justify-content-between gap-2">
+                            <div class="d-block d-xl-flex align-items-center">
+                                <h4 class="mb-0 fw-semibold">Content List</h4>
+                                <nav class="card-tab mt-2 mt-xl-0 ms-3">
+                                    <div class="nav nav-tabs" id="content-nav-tab" role="tablist">
+                                        <button class="nav-link active" id="nav-movies-tab" data-bs-toggle="tab" data-bs-target="#nav-movies" type="button" role="tab">Movies</button>
+                                        <button class="nav-link" id="nav-series-tab" data-bs-toggle="tab" data-bs-target="#nav-series" type="button" role="tab">Series</button>
+                                    </div>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content">
+                    <div class="tab-pane show active" id="nav-movies" role="tabpanel">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped w-100">
+                                    <thead>
+                                        <tr>
+                                            <th>Poster</th>
+                                            <th>Title</th>
+                                            <th>Ratings</th>
+                                            <th>Year</th>
+                                            <th>Language</th>
+                                            <th>Featured</th>
+                                            <th>Show</th>
+                                            <th class="text-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="movies-list-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="nav-series" role="tabpanel">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped w-100">
+                                    <thead>
+                                        <tr>
+                                            <th>Poster</th>
+                                            <th>Title</th>
+                                            <th>Ratings</th>
+                                            <th>Year</th>
+                                            <th>Language</th>
+                                            <th>Featured</th>
+                                            <th>Show</th>
+                                            <th class="text-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="series-list-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── TAB: MEDIA GALLERY ── -->
+        <section id="tab-mediaGallery" class="tab-section section">
+            <div class="section-header"><h1>Media Gallery</h1></div>
+            <div class="card">
+                <div class="card-header"><h4>Uploaded Posters</h4></div>
+                <div class="card-body">
+                    <div class="row" id="media-gallery-grid">
+                        <div class="col-12 text-center text-muted">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── TAB: TOP CONTENTS ── -->
+        <section id="tab-topContents" class="tab-section section">
+            <div class="section-header">
+                <h1>Top Contents</h1>
+                <button type="button" class="btn btn-primary text-light px-4" id="btn-add-top-content">Add to Top List</button>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped w-100">
+                            <thead>
+                                <tr>
+                                    <th>Position</th>
+                                    <th>Poster</th>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Year</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-content-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── TAB: ACTORS ── -->
+        <section id="tab-actors" class="tab-section section">
+            <div class="section-header">
+                <h1>Actors</h1>
+                <button type="button" class="btn btn-primary text-light px-4" id="btn-add-actor">Add Actor</button>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped w-100">
+                            <thead>
+                                <tr>
+                                    <th>Avatar</th>
+                                    <th>Name</th>
+                                    <th>DOB</th>
+                                    <th>Bio</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="actors-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── TAB: GENRES ── -->
+        <section id="tab-genres" class="tab-section section">
+            <div class="section-header">
+                <h1>Genres</h1>
+                <button type="button" class="btn btn-primary text-light px-4" id="btn-add-genre">Add Genre</button>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped w-100">
+                            <thead>
+                                <tr><th>ID</th><th>Title</th><th class="text-end">Action</th></tr>
+                            </thead>
+                            <tbody id="genres-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── TAB: LANGUAGES ── -->
+        <section id="tab-languages" class="tab-section section">
+            <div class="section-header">
+                <h1>Languages / VJ</h1>
+                <button type="button" class="btn btn-primary text-light px-4" id="btn-add-language">Add Language</button>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped w-100">
+                            <thead>
+                                <tr><th>ID</th><th>Title / VJ</th><th>Code</th><th class="text-end">Action</th></tr>
+                            </thead>
+                            <tbody id="languages-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── TAB: LIVE TV CATEGORIES ── -->
+        <section id="tab-liveTvCategories" class="tab-section section">
+            <div class="section-header">
+                <h1>Live TV Categories</h1>
+                <button type="button" class="btn btn-primary text-light px-4" id="btn-add-tv-category">Add Category</button>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped w-100">
+                            <thead>
+                                <tr><th>Image</th><th>Title</th><th class="text-end">Action</th></tr>
+                            </thead>
+                            <tbody id="tv-categories-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── TAB: LIVE TV CHANNELS ── -->
+        <section id="tab-liveTvChannels" class="tab-section section">
+            <div class="section-header">
+                <h1>Live TV Channels</h1>
+                <button type="button" class="btn btn-primary text-light px-4" id="btn-add-tv-channel">Add Channel</button>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped w-100">
+                            <thead>
+                                <tr>
+                                    <th>Logo</th>
+                                    <th>Title</th>
+                                    <th>Categories</th>
+                                    <th>Stream Type</th>
+                                    <th>Views</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tv-channels-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── TAB: NOTIFICATION ── -->
+        <section id="tab-notification" class="tab-section section">
+            <div class="section-header">
+                <h1>Notifications</h1>
+                <button type="button" class="btn btn-primary text-light px-4" id="btn-add-notification">Send Notification</button>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped w-100">
+                            <thead>
+                                <tr><th>ID</th><th>Title</th><th>Message</th><th>Date</th></tr>
+                            </thead>
+                            <tbody id="notification-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── TAB: ADMOB ── -->
+        <section id="tab-admob" class="tab-section section">
+            <div class="section-header"><h1>Admob Configuration</h1></div>
+            <div class="row" id="admob-config-container">
+                <div class="col-12 text-center text-muted">Loading...</div>
+            </div>
+        </section>
+
+        <!-- ── TAB: CUSTOM ADS ── -->
+        <section id="tab-customAds" class="tab-section section">
+            <div class="section-header">
+                <h1>Custom Ads</h1>
+                <button type="button" class="btn btn-primary text-light px-4" id="btn-add-custom-ad">Add Campaign</button>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped w-100">
+                            <thead>
+                                <tr>
+                                    <th>Logo</th>
+                                    <th>Title / Brand</th>
+                                    <th>Target</th>
+                                    <th>Start</th>
+                                    <th>End</th>
+                                    <th>Views</th>
+                                    <th>Clicks</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="custom-ads-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── TAB: SETTING ── -->
+        <section id="tab-setting" class="tab-section section">
+            <div class="section-header"><h1>Settings</h1></div>
+            <form id="setting-form">
                 <div class="card">
+                    <div class="card-header"><h4>Global App Settings</h4></div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Avatar</th>
-                                        <th>Full Name</th>
-                                        <th>Email</th>
-                                        <th>Login Type</th>
-                                        <th>Platform</th>
-                                        <th>Registered At</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="users-list-body"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TAB: Content (Movies & Series) -->
-            <section id="tab-contentList" class="tab-section">
-                <div class="section-header" style="justify-content:space-between;">
-                    <h1>Content Management</h1>
-                    <button class="btn btn-primary" id="btn-add-content"><i class="fa fa-plus"></i> Add New Content</button>
-                </div>
-                <div class="card">
-                    <div class="card-body">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <input type="text" class="form-control" id="search-content" placeholder="Search by title...">
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label class="form-label">App Name</label>
+                                <input type="text" class="form-control" id="set-app-name" required>
                             </div>
-                            <div class="col-md-6">
-                                <select class="form-control" id="filter-content-type">
-                                    <option value="all">All Type</option>
-                                    <option value="0">Movies</option>
-                                    <option value="1">Series</option>
+                            <div class="col-md-6 form-group">
+                                <label class="form-label">Video Skip Time (seconds)</label>
+                                <input type="number" class="form-control" id="set-video-skip" required>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label class="form-label">Live TV Enabled</label>
+                                <select class="form-control" id="set-live-tv">
+                                    <option value="1">Enable</option>
+                                    <option value="0">Disable</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label class="form-label">Custom Ads (Android)</label>
+                                <select class="form-control" id="set-custom-android">
+                                    <option value="1">Enable</option>
+                                    <option value="0">Disable</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label class="form-label">Custom Ads (iOS)</label>
+                                <select class="form-control" id="set-custom-ios">
+                                    <option value="1">Enable</option>
+                                    <option value="0">Disable</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label class="form-label">Admob (Android)</label>
+                                <select class="form-control" id="set-admob-android">
+                                    <option value="1">Enable</option>
+                                    <option value="0">Disable</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label class="form-label">Admob (iOS)</label>
+                                <select class="form-control" id="set-admob-ios">
+                                    <option value="1">Enable</option>
+                                    <option value="0">Disable</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Poster</th>
-                                        <th>Title</th>
-                                        <th>Type</th>
-                                        <th>Release Year</th>
-                                        <th>VJ Name / Language</th>
-                                        <th>Featured</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="content-list-body"></tbody>
-                            </table>
-                        </div>
+                        <button type="submit" class="btn btn-primary text-light px-4 mt-2">Save Settings</button>
                     </div>
                 </div>
-            </section>
+            </form>
+        </section>
 
-            <!-- TAB: Media Gallery -->
-            <section id="tab-mediaGallery" class="tab-section">
-                <div class="section-header"><h1>Media Gallery</h1></div>
+        <!-- ── TAB: PRIVACY ── -->
+        <section id="tab-viewPrivacy" class="tab-section section">
+            <div class="section-header"><h1>Privacy Policy</h1></div>
+            <form id="privacy-form">
                 <div class="card">
+                    <div class="card-header"><h4>Edit Privacy Policy</h4></div>
                     <div class="card-body">
-                        <p class="text-muted">All uploaded files inside your Supabase <strong>flixy</strong> bucket are accessible directly in the Supabase Storage panel dashboard.</p>
-                        <div class="row" id="media-gallery-grid"></div>
+                        <div class="form-group">
+                            <label class="form-label">Policy Content (HTML supported)</label>
+                            <textarea class="form-control" id="privacy-text" rows="15" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary text-light px-4 mt-2">Save Policy</button>
                     </div>
                 </div>
-            </section>
+            </form>
+        </section>
 
-            <!-- TAB: Top Contents -->
-            <section id="tab-topContents" class="tab-section">
-                <div class="section-header" style="justify-content:space-between;">
-                    <h1>Top Contents</h1>
-                    <button class="btn btn-primary" id="btn-add-top-content"><i class="fa fa-plus"></i> Add Content to Top 10</button>
-                </div>
+        <!-- ── TAB: TERMS ── -->
+        <section id="tab-viewTerms" class="tab-section section">
+            <div class="section-header"><h1>Terms of Use</h1></div>
+            <form id="terms-form">
                 <div class="card">
+                    <div class="card-header"><h4>Edit Terms of Use</h4></div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Position (Index)</th>
-                                        <th>Poster</th>
-                                        <th>Title</th>
-                                        <th>Type</th>
-                                        <th>Release Year</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="top-content-list-body"></tbody>
-                            </table>
+                        <div class="form-group">
+                            <label class="form-label">Terms Content (HTML supported)</label>
+                            <textarea class="form-control" id="terms-text" rows="15" required></textarea>
                         </div>
+                        <button type="submit" class="btn btn-primary text-light px-4 mt-2">Save Terms</button>
                     </div>
                 </div>
-            </section>
+            </form>
+        </section>
 
-            <!-- TAB: Actors -->
-            <section id="tab-actors" class="tab-section">
-                <div class="section-header" style="justify-content:space-between;">
-                    <h1>Actors</h1>
-                    <button class="btn btn-primary" id="btn-add-actor"><i class="fa fa-plus"></i> Add New Actor</button>
-                </div>
-                <div class="card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Avatar</th>
-                                        <th>Name</th>
-                                        <th>DOB</th>
-                                        <th>Bio</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="actors-list-body"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
+    </div><!-- /main-content -->
+</div><!-- /dashboard-container -->
 
-            <!-- TAB: Genres -->
-            <section id="tab-genres" class="tab-section">
-                <div class="section-header" style="justify-content:space-between;">
-                    <h1>Genres</h1>
-                    <button class="btn btn-primary" id="btn-add-genre"><i class="fa fa-plus"></i> Add Genre</button>
-                </div>
-                <div class="card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Title</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="genres-list-body"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TAB: Languages -->
-            <section id="tab-languages" class="tab-section">
-                <div class="section-header" style="justify-content:space-between;">
-                    <h1>Languages / VJ</h1>
-                    <button class="btn btn-primary" id="btn-add-language"><i class="fa fa-plus"></i> Add Language / VJ</button>
-                </div>
-                <div class="card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Title / VJ Name</th>
-                                        <th>Language Code</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="languages-list-body"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TAB: Live TV Categories -->
-            <section id="tab-liveTvCategories" class="tab-section">
-                <div class="section-header" style="justify-content:space-between;">
-                    <h1>Live TV Categories</h1>
-                    <button class="btn btn-primary" id="btn-add-tv-category"><i class="fa fa-plus"></i> Add Category</button>
-                </div>
-                <div class="card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Image</th>
-                                        <th>Category Title</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tv-categories-list-body"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TAB: Live TV Channels -->
-            <section id="tab-liveTvChannels" class="tab-section">
-                <div class="section-header" style="justify-content:space-between;">
-                    <h1>Live TV Channels</h1>
-                    <button class="btn btn-primary" id="btn-add-tv-channel"><i class="fa fa-plus"></i> Add Channel</button>
-                </div>
-                <div class="card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Logo</th>
-                                        <th>Title</th>
-                                        <th>Categories</th>
-                                        <th>Stream Type</th>
-                                        <th>Source Link</th>
-                                        <th>Views</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tv-channels-list-body"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TAB: Notification -->
-            <section id="tab-notification" class="tab-section">
-                <div class="section-header" style="justify-content:space-between;">
-                    <h1>Notification History</h1>
-                    <button class="btn btn-primary" id="btn-add-notification"><i class="fa fa-plus"></i> Send New Notification</button>
-                </div>
-                <div class="card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Title</th>
-                                        <th>Description</th>
-                                        <th>Sent Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="notification-list-body"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TAB: Admob -->
-            <section id="tab-admob" class="tab-section">
-                <div class="section-header"><h1>Google Admob Configuration</h1></div>
-                <div class="row" id="admob-config-container">
-                    <!-- Loaded dynamically via JS -->
-                </div>
-            </section>
-
-            <!-- TAB: Custom Ads -->
-            <section id="tab-customAds" class="tab-section">
-                <div class="section-header" style="justify-content:space-between;">
-                    <h1>Custom Ads</h1>
-                    <button class="btn btn-primary" id="btn-add-custom-ad"><i class="fa fa-plus"></i> Add Ad Campaign</button>
-                </div>
-                <div class="card">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Logo</th>
-                                        <th>Brand Name / Title</th>
-                                        <th>Target</th>
-                                        <th>Start Date</th>
-                                        <th>End Date</th>
-                                        <th>Views</th>
-                                        <th>Clicks</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="custom-ads-list-body"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TAB: Setting -->
-            <section id="tab-setting" class="tab-section">
-                <div class="section-header"><h1>Global App Settings</h1></div>
-                <form id="setting-form">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6 form-group">
-                                    <label>App Name</label>
-                                    <input type="text" class="form-control" id="set-app-name" required>
-                                </div>
-                                <div class="col-md-6 form-group">
-                                    <label>Video Skip Time (seconds)</label>
-                                    <input type="number" class="form-control" id="set-video-skip" required>
-                                </div>
-                                <div class="col-md-6 form-group">
-                                    <label>Enable Live TV</label>
-                                    <select class="form-control" id="set-live-tv">
-                                        <option value="1">Enable</option>
-                                        <option value="0">Disable</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 form-group">
-                                    <label>Enable Custom Ads (Android)</label>
-                                    <select class="form-control" id="set-custom-android">
-                                        <option value="1">Enable</option>
-                                        <option value="0">Disable</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 form-group">
-                                    <label>Enable Custom Ads (iOS)</label>
-                                    <select class="form-control" id="set-custom-ios">
-                                        <option value="1">Enable</option>
-                                        <option value="0">Disable</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 form-group">
-                                    <label>Enable Admob (Android)</label>
-                                    <select class="form-control" id="set-admob-android">
-                                        <option value="1">Enable</option>
-                                        <option value="0">Disable</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 form-group">
-                                    <label>Enable Admob (iOS)</label>
-                                    <select class="form-control" id="set-admob-ios">
-                                        <option value="1">Enable</option>
-                                        <option value="0">Disable</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Save Settings</button>
-                        </div>
-                    </div>
-                </form>
-            </section>
-
-            <!-- TAB: Privacy Policy -->
-            <section id="tab-viewPrivacy" class="tab-section">
-                <div class="section-header"><h1>Privacy Policy</h1></div>
-                <form id="privacy-form">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="form-group">
-                                <label>Edit Policy text (HTML support)</label>
-                                <textarea class="form-control" id="privacy-text" rows="15" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Save Privacy Policy</button>
-                        </div>
-                    </div>
-                </form>
-            </section>
-
-            <!-- TAB: Terms of Use -->
-            <section id="tab-viewTerms" class="tab-section">
-                <div class="section-header"><h1>Terms of Use</h1></div>
-                <form id="terms-form">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="form-group">
-                                <label>Edit Terms text (HTML support)</label>
-                                <textarea class="form-control" id="terms-text" rows="15" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Save Terms of Use</button>
-                        </div>
-                    </div>
-                </form>
-            </section>
+<!-- ===================== MODAL ===================== -->
+<div id="flixy-modal" class="flixy-modal-overlay">
+    <div class="flixy-modal-box">
+        <div class="flixy-modal-header">
+            <h5 id="flixy-modal-title" style="margin:0;font-size:18px;color:#fff;padding-left:10px;">Modal Title</h5>
+            <button class="flixy-modal-close" id="flixy-modal-close">&times;</button>
         </div>
+        <div class="flixy-modal-body" id="flixy-modal-body"></div>
     </div>
+</div>
 
-    <!-- GENERAL STATIC MODAL -->
-    <div id="static-modal" class="static-modal">
-        <div class="static-modal-content">
-            <div class="static-modal-header">
-                <h5 class="modal-title" id="static-modal-title">Modal Title</h5>
-                <button type="button" class="static-modal-close" id="static-modal-close-btn">&times;</button>
-            </div>
-            <div class="static-modal-body" id="static-modal-body">
-                <!-- Content injected dynamically -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Template JS files -->
-    <script src="assets/js/jquery-3.6.0.min.js"></script>
-    <script src="assets/js/bootstrap.min.js"></script>
-    <script src="assets/js/app.js"></script> <!-- original template JS -->
-    <script src="assets/js/custom.js"></script> <!-- original custom actions -->
-    
-    <!-- Supabase Client Logic -->
-    <script src="admin_logic.js"></script>
+<!-- Scripts -->
+<script src="assets/js/jquery-3.6.0.min.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/custom.js"></script>
+<script src="admin_logic.js"></script>
 </body>
 </html>
