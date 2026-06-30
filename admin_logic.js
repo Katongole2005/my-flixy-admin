@@ -1,4 +1,4 @@
-﻿// Supabase Credentials
+// Supabase Credentials
 const SUPABASE_URL = "https://izbnffyqvbbbggfzdibe.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6Ym5mZnlxdmJiYmdnZnpkaWJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMjA0MDMsImV4cCI6MjA5NzU5NjQwM30._xV3h067QE3pkSlWuGSCmt7ZmDIECkfxftwETuDMaCU";
 
@@ -2742,6 +2742,12 @@ async function loadSettings() {
         document.getElementById('set-custom-ios').value = data.is_custom_ios.toString();
         document.getElementById('set-admob-android').value = data.is_admob_android.toString();
         document.getElementById('set-admob-ios').value = data.is_admob_ios.toString();
+        
+        // Populating new App Update fields
+        document.getElementById('set-app-version').value = data.app_version || '1';
+        document.getElementById('set-force-update').value = (data.is_force_update || 0).toString();
+        document.getElementById('set-app-link').value = data.app_link || '';
+        document.getElementById('set-app-update-desc').value = data.app_update_desc || '';
 
         document.getElementById('setting-form').onsubmit = async (e) => {
             e.preventDefault();
@@ -2757,6 +2763,13 @@ async function loadSettings() {
                     is_custom_ios: parseInt(document.getElementById('set-custom-ios').value),
                     is_admob_android: parseInt(document.getElementById('set-admob-android').value),
                     is_admob_ios: parseInt(document.getElementById('set-admob-ios').value),
+                    
+                    // Saving new App Update fields
+                    app_version: document.getElementById('set-app-version').value,
+                    is_force_update: parseInt(document.getElementById('set-force-update').value),
+                    app_link: document.getElementById('set-app-link').value,
+                    app_update_desc: document.getElementById('set-app-update-desc').value,
+                    
                     updated_at: new Date().toISOString()
                 };
                 const { error: errUp } = await _supabase.from('global_settings').update(updateData).eq('id', 1);

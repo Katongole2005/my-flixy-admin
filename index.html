@@ -751,6 +751,29 @@
                                 </select>
                             </div>
                         </div>
+                        <hr style="border-top: 1px solid var(--border-color); margin: 25px 0;">
+                        <h4 class="mb-3">App Update Settings</h4>
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label class="form-label">Latest App Version Code / Name</label>
+                                <input type="text" class="form-control" id="set-app-version" required placeholder="e.g. 2 or 1.1">
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label class="form-label">Force Update (Mandatory)</label>
+                                <select class="form-control" id="set-force-update">
+                                    <option value="0">No (Optional Update)</option>
+                                    <option value="1">Yes (Force Update)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12 form-group">
+                                <label class="form-label">App Download / Update Link</label>
+                                <input type="text" class="form-control" id="set-app-link" required placeholder="https://play.google.com/store/apps/details?id=...">
+                            </div>
+                            <div class="col-md-12 form-group">
+                                <label class="form-label">What's New / Update Changelog</label>
+                                <textarea class="form-control" id="set-app-update-desc" rows="3" required placeholder="Describe what is new in the latest update..."></textarea>
+                            </div>
+                        </div>
                         <button type="submit" class="btn btn-primary text-light px-4 mt-2">Save Settings</button>
                     </div>
                 </div>
