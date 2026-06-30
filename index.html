@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flixy Admin Panel</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-fontawesome/6.4.0/css/all.min.css">
+    <!-- Supabase Client JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-container" class="login-wrapper">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="fa-solid fa-clapperboard logo-icon"></i>
+                <h1>FLIXY</h1>
+                <p>Sign in to your dashboard</p>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username"><i class="fa-solid fa-user"></i> Username</label>
+                    <input type="text" id="username" placeholder="Enter username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password"><i class="fa-solid fa-lock"></i> Password</label>
+                    <input type="password" id="password" placeholder="Enter password" required>
+                </div>
+                <div class="error-msg" id="login-error"></div>
+                <button type="submit" class="btn-primary login-btn">
+                    <span>Login</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Layout -->
+    <div id="dashboard-container" class="dashboard-wrapper" style="display: none;">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-clapperboard brand-icon"></i>
+                <h2>FLIXY ADMIN</h2>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active" data-tab="contents"><i class="fa-solid fa-film"></i> Movies & Series</a>
+                <a href="#" class="menu-item" data-tab="genres"><i class="fa-solid fa-tags"></i> Genres</a>
+                <a href="#" class="menu-item" data-tab="languages"><i class="fa-solid fa-globe"></i> Languages</a>
+                <a href="#" class="menu-item" data-tab="actors"><i class="fa-solid fa-masks-theater"></i> Actors</a>
+                <a href="#" class="menu-item" data-tab="livetv"><i class="fa-solid fa-tv"></i> Live TV</a>
+                <a href="#" class="menu-item" data-tab="ads"><i class="fa-solid fa-rectangle-ad"></i> Custom Ads</a>
+                <a href="#" class="menu-item" data-tab="settings"><i class="fa-solid fa-gear"></i> Settings</a>
+                <a href="#" class="menu-item" data-tab="users"><i class="fa-solid fa-users"></i> Users</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span id="admin-name">Administrator</span>
+                </div>
+                <button id="logout-btn" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="content-header">
+                <h1 id="tab-title">Movies & Series</h1>
+                <div class="header-actions" id="tab-actions">
+                    <button class="btn-primary" id="btn-add-content"><i class="fa-solid fa-plus"></i> Add New</button>
+                </div>
+            </header>
+
+            <!-- Tab Content: Contents (Movies & Series) -->
+            <section id="tab-contents" class="tab-section active">
+                <div class="filter-bar">
+                    <div class="search-input">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="search-contents" placeholder="Search title or description...">
+                    </div>
+                    <select id="filter-content-type">
+                        <option value="all">All Content</option>
+                        <option value="0">Movies Only</option>
+                        <option value="1">Series Only</option>
+                    </select>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Thumbnail</th>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Release Year</th>
+                                <th>VJ/Language</th>
+                                <th>Featured</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contents-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Tab Content: Genres -->
+            <section id="tab-genres" class="tab-section">
+                <div class="table-actions-top">
+                    <button class="btn-primary" id="btn-add-genre"><i class="fa-solid fa-plus"></i> Add Genre</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="genres-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Tab Content: Languages -->
+            <section id="tab-languages" class="tab-section">
+                <div class="table-actions-top">
+                    <button class="btn-primary" id="btn-add-language"><i class="fa-solid fa-plus"></i> Add Language</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Code</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="languages-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Tab Content: Actors -->
+            <section id="tab-actors" class="tab-section">
+                <div class="table-actions-top">
+                    <button class="btn-primary" id="btn-add-actor"><i class="fa-solid fa-plus"></i> Add Actor</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Profile</th>
+                                <th>Full Name</th>
+                                <th>DOB</th>
+                                <th>Bio</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="actors-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Tab Content: Live TV -->
+            <section id="tab-livetv" class="tab-section">
+                <div class="tab-sub-navigation">
+                    <button class="sub-nav-item active" data-subtab="tvchannels">Channels</button>
+                    <button class="sub-nav-item" data-subtab="tvcategories">Categories</button>
+                </div>
+                
+                <!-- TV Channels -->
+                <div id="subtab-tvchannels" class="subtab-section active">
+                    <div class="table-actions-top">
+                        <button class="btn-primary" id="btn-add-tvchannel"><i class="fa-solid fa-plus"></i> Add TV Channel</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <th>Thumbnail</th>
+                                <th>Title</th>
+                                <th>Categories</th>
+                                <th>Type</th>
+                                <th>Source Link</th>
+                                <th>Views</th>
+                                <th>Actions</th>
+                            </thead>
+                            <tbody id="tvchannels-list">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TV Categories -->
+                <div id="subtab-tvcategories" class="subtab-section">
+                    <div class="table-actions-top">
+                        <button class="btn-primary" id="btn-add-tvcategory"><i class="fa-solid fa-plus"></i> Add Category</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <th>Image</th>
+                                <th>Title</th>
+                                <th>Actions</th>
+                            </thead>
+                            <tbody id="tvcategories-list">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab Content: Custom Ads -->
+            <section id="tab-ads" class="tab-section">
+                <div class="table-actions-top">
+                    <button class="btn-primary" id="btn-add-ad"><i class="fa-solid fa-plus"></i> Add Ad Campaign</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <th>Logo</th>
+                            <th>Brand / Title</th>
+                            <th>Target Platforms</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Views</th>
+                            <th>Clicks</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </thead>
+                        <tbody id="ads-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Tab Content: Settings -->
+            <section id="tab-settings" class="tab-section">
+                <form id="settings-form" class="settings-grid">
+                    <!-- Global Settings -->
+                    <div class="settings-card">
+                        <h3><i class="fa-solid fa-sliders"></i> Global Settings</h3>
+                        <div class="form-group">
+                            <label>App Name</label>
+                            <input type="text" id="setting-app-name" required>
+                        </div>
+                        <div class="form-group toggle-group">
+                            <label>Enable Live TV</label>
+                            <input type="checkbox" id="setting-live-tv-enable" class="ios-toggle">
+                        </div>
+                        <div class="form-group">
+                            <label>Video Ad Skip Time (seconds)</label>
+                            <input type="number" id="setting-ad-skip-time" min="0" required>
+                        </div>
+                    </div>
+
+                    <!-- Custom Ads Configurations -->
+                    <div class="settings-card">
+                        <h3><i class="fa-solid fa-rectangle-ad"></i> Ad Placements</h3>
+                        <div class="form-group toggle-group">
+                            <label>Enable Custom Ads (Android)</label>
+                            <input type="checkbox" id="setting-custom-android" class="ios-toggle">
+                        </div>
+                        <div class="form-group toggle-group">
+                            <label>Enable Custom Ads (iOS)</label>
+                            <input type="checkbox" id="setting-custom-ios" class="ios-toggle">
+                        </div>
+                        <div class="form-group toggle-group">
+                            <label>Enable Admob (Android)</label>
+                            <input type="checkbox" id="setting-admob-android" class="ios-toggle">
+                        </div>
+                        <div class="form-group toggle-group">
+                            <label>Enable Admob (iOS)</label>
+                            <input type="checkbox" id="setting-admob-ios" class="ios-toggle">
+                        </div>
+                    </div>
+
+                    <div class="settings-submit-container">
+                        <button type="submit" class="btn-primary save-settings-btn"><i class="fa-solid fa-save"></i> Save Settings</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Tab Content: Users -->
+            <section id="tab-users" class="tab-section">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <th>Avatar</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Login Provider</th>
+                            <th>Device Info</th>
+                            <th>Signed Up</th>
+                        </thead>
+                        <tbody id="users-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- GENERAL MODAL TEMPLATE -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-card" id="modal-card">
+            <div class="modal-header">
+                <h2 id="modal-title">Modal Title</h2>
+                <button class="modal-close" id="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Injected dynamically based on edit/add target -->
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="app.js"></script>
+</body>
+</html>
