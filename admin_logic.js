@@ -345,16 +345,34 @@ async function loadDashboardStats() {
 // ==========================================
 // SECTION 2: USERS LIST
 // ==========================================
+function formatRelativeTime(date) {
+    if (!date) return 'Never';
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+    if (seconds < 0) return 'Just now';
+    if (seconds < 60) return 'Just now';
+    
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} min${minutes > 1 ? 's' : ''} ago`;
+    
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hr${hours > 1 ? 's' : ''} ago`;
+    
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days} day${days > 1 ? 's' : ''} ago`;
+    
+    return new Date(date).toLocaleDateString();
+}
+
 async function loadUsers() {
     const listBody = document.getElementById('users-list-body');
-    listBody.innerHTML = `<tr><td colspan="6" class="text-center">Loading users...</td></tr>`;
+    listBody.innerHTML = `<tr><td colspan="8" class="text-center">Loading users...</td></tr>`;
 
     try {
         const { data, error } = await _supabase.from('users').select('*').order('id', { ascending: false });
         if (error) throw error;
 
         if (!data || data.length === 0) {
-            listBody.innerHTML = `<tr><td colspan="6" class="text-center">No users registered yet.</td></tr>`;
+            listBody.innerHTML = `<tr><td colspan="8" class="text-center">No users registered yet.</td></tr>`;
             return;
         }
 
@@ -364,6 +382,16 @@ async function loadUsers() {
             const dateStr = u.created_at ? new Date(u.created_at).toLocaleDateString() : 'N/A';
             const platform = u.device_type === 1 ? 'Android' : (u.device_type === 2 ? 'iOS' : 'Web/Email');
 
+            // Online status calculation (active in the last 5 minutes)
+            const lastSeen = u.last_seen_at;
+            const isOnline = lastSeen && (Math.floor((new Date() - new Date(lastSeen)) / 1000) < 300);
+            
+            const statusHtml = isOnline 
+                ? `<span class="badge badge-success text-light"><i class="fa fa-circle text-light me-1" style="font-size: 8px;"></i> Online</span>` 
+                : `<span class="badge badge-secondary text-light">Offline</span>`;
+                
+            const lastSeenStr = formatRelativeTime(lastSeen);
+
             listBody.innerHTML += `
                 <tr>
                     <td>${avatar}</td>
@@ -371,12 +399,14 @@ async function loadUsers() {
                     <td>${escapeHtml(u.email || 'N/A')}</td>
                     <td><span class="badge badge-primary">${escapeHtml(u.login_type || 'Email')}</span></td>
                     <td>${platform}</td>
+                    <td>${statusHtml}</td>
+                    <td>${lastSeenStr}</td>
                     <td>${dateStr}</td>
                 </tr>
             `;
         });
     } catch (e) {
-        listBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error: ${e.message}</td></tr>`;
+        listBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Error: ${e.message}</td></tr>`;
     }
 }
 
