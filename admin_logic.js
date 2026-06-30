@@ -173,6 +173,52 @@ function setupEventListeners() {
             if (e.target === staticModal) hideModal();
         });
     }
+
+    // Pagination Button Listeners
+    const btnMoviesPrev = document.getElementById('btn-movies-prev');
+    const btnMoviesNext = document.getElementById('btn-movies-next');
+    if (btnMoviesPrev) btnMoviesPrev.onclick = (e) => {
+        e.preventDefault();
+        if (moviesPage > 0) {
+            moviesPage--;
+            loadMovies();
+        }
+    };
+    if (btnMoviesNext) btnMoviesNext.onclick = (e) => {
+        e.preventDefault();
+        moviesPage++;
+        loadMovies();
+    };
+
+    const btnSeriesPrev = document.getElementById('btn-series-prev');
+    const btnSeriesNext = document.getElementById('btn-series-next');
+    if (btnSeriesPrev) btnSeriesPrev.onclick = (e) => {
+        e.preventDefault();
+        if (seriesPage > 0) {
+            seriesPage--;
+            loadSeries();
+        }
+    };
+    if (btnSeriesNext) btnSeriesNext.onclick = (e) => {
+        e.preventDefault();
+        seriesPage++;
+        loadSeries();
+    };
+
+    const btnActorsPrev = document.getElementById('btn-actors-prev');
+    const btnActorsNext = document.getElementById('btn-actors-next');
+    if (btnActorsPrev) btnActorsPrev.onclick = (e) => {
+        e.preventDefault();
+        if (actorsPage > 0) {
+            actorsPage--;
+            loadActors();
+        }
+    };
+    if (btnActorsNext) btnActorsNext.onclick = (e) => {
+        e.preventDefault();
+        actorsPage++;
+        loadActors();
+    };
 }
 
 function switchTab(tabId) {
@@ -293,8 +339,8 @@ async function loadDashboardStats() {
         const [{ count: movies }, { count: series }, { count: actors }, { count: genres },
                { count: languages }, { count: tvCats }, { count: tvChannels },
                { count: notifications }, { count: admob }, { count: customAds }, { count: users }] = await Promise.all([
-            _supabase.from('contents').select('*', { count: 'exact', head: true }).eq('type', 0),
             _supabase.from('contents').select('*', { count: 'exact', head: true }).eq('type', 1),
+            _supabase.from('contents').select('*', { count: 'exact', head: true }).eq('type', 2),
             _supabase.from('actors').select('*', { count: 'exact', head: true }),
             _supabase.from('genres').select('*', { count: 'exact', head: true }),
             _supabase.from('languages').select('*', { count: 'exact', head: true }),
@@ -416,8 +462,8 @@ async function loadUsers() {
 async function loadContentCounts() {
     try {
         const [{ count: movies }, { count: series }] = await Promise.all([
-            _supabase.from('contents').select('*', { count: 'exact', head: true }).eq('type', 0),
             _supabase.from('contents').select('*', { count: 'exact', head: true }).eq('type', 1),
+            _supabase.from('contents').select('*', { count: 'exact', head: true }).eq('type', 2),
         ]);
         const m = movies || 0, s = series || 0;
         document.getElementById('count-movies').textContent = m;
@@ -468,12 +514,34 @@ function buildContentRows(data, isMovie) {
     }).join('');
 }
 
+let moviesPage = 0;
+let seriesPage = 0;
+let actorsPage = 0;
+const PAGE_SIZE = 50;
+
 async function loadMovies() {
     const listBody = document.getElementById('movies-list-body');
     listBody.innerHTML = `<tr><td colspan="8" class="text-center">Loading movies...</td></tr>`;
+    
+    const pageNumEl = document.getElementById('movies-page-num');
+    if (pageNumEl) pageNumEl.textContent = `Page ${moviesPage + 1}`;
+    
     try {
-        const { data, error } = await _supabase.from('contents').select('*').eq('type', 0).order('release_year', { ascending: false });
+        const offset = moviesPage * PAGE_SIZE;
+        const { data, error } = await _supabase.from('contents')
+            .select('*')
+            .eq('type', 1)
+            .order('is_featured', { ascending: false })
+            .order('release_year', { ascending: false })
+            .range(offset, offset + PAGE_SIZE - 1);
+            
         if (error) throw error;
+        
+        const prevBtn = document.getElementById('btn-movies-prev');
+        const nextBtn = document.getElementById('btn-movies-next');
+        if (prevBtn) prevBtn.disabled = (moviesPage === 0);
+        if (nextBtn) nextBtn.disabled = (!data || data.length < PAGE_SIZE);
+        
         listBody.innerHTML = buildContentRows(data, true);
     } catch (e) {
         listBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Error: ${e.message}</td></tr>`;
@@ -483,9 +551,26 @@ async function loadMovies() {
 async function loadSeries() {
     const listBody = document.getElementById('series-list-body');
     listBody.innerHTML = `<tr><td colspan="8" class="text-center">Loading series...</td></tr>`;
+    
+    const pageNumEl = document.getElementById('series-page-num');
+    if (pageNumEl) pageNumEl.textContent = `Page ${seriesPage + 1}`;
+    
     try {
-        const { data, error } = await _supabase.from('contents').select('*').eq('type', 1).order('release_year', { ascending: false });
+        const offset = seriesPage * PAGE_SIZE;
+        const { data, error } = await _supabase.from('contents')
+            .select('*')
+            .eq('type', 2)
+            .order('is_featured', { ascending: false })
+            .order('release_year', { ascending: false })
+            .range(offset, offset + PAGE_SIZE - 1);
+            
         if (error) throw error;
+        
+        const prevBtn = document.getElementById('btn-series-prev');
+        const nextBtn = document.getElementById('btn-series-next');
+        if (prevBtn) prevBtn.disabled = (seriesPage === 0);
+        if (nextBtn) nextBtn.disabled = (!data || data.length < PAGE_SIZE);
+        
         listBody.innerHTML = buildContentRows(data, false);
     } catch (e) {
         listBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Error: ${e.message}</td></tr>`;
@@ -536,8 +621,8 @@ function showAddContentModal() {
                 <div class="col-md-4 form-group">
                     <label>Type</label>
                     <select class="form-control" id="add-c-type">
-                        <option value="0">Movie</option>
-                        <option value="1">Series</option>
+                        <option value="1">Movie</option>
+                        <option value="2">Series</option>
                     </select>
                 </div>
                 <div class="col-md-4 form-group">
@@ -655,8 +740,8 @@ async function showEditContentModal(id) {
                 <div class="col-md-4 form-group">
                     <label>Type</label>
                     <select class="form-control" id="edit-c-type">
-                        <option value="0" ${item.type === 0 ? 'selected' : ''}>Movie</option>
-                        <option value="1" ${item.type === 1 ? 'selected' : ''}>Series</option>
+                        <option value="1" ${item.type === 1 ? 'selected' : ''}>Movie</option>
+                        <option value="2" ${item.type === 2 ? 'selected' : ''}>Series</option>
                     </select>
                 </div>
                 <div class="col-md-4 form-group">
@@ -1549,9 +1634,22 @@ async function loadActors() {
     const listBody = document.getElementById('actors-list-body');
     listBody.innerHTML = `<tr><td colspan="5" class="text-center">Loading actors...</td></tr>`;
 
+    const pageNumEl = document.getElementById('actors-page-num');
+    if (pageNumEl) pageNumEl.textContent = `Page ${actorsPage + 1}`;
+
     try {
-        const { data, error } = await _supabase.from('actors').select('*').order('id', { ascending: false });
+        const offset = actorsPage * PAGE_SIZE;
+        const { data, error } = await _supabase.from('actors')
+            .select('*')
+            .order('id', { ascending: false })
+            .range(offset, offset + PAGE_SIZE - 1);
+            
         if (error) throw error;
+
+        const prevBtn = document.getElementById('btn-actors-prev');
+        const nextBtn = document.getElementById('btn-actors-next');
+        if (prevBtn) prevBtn.disabled = (actorsPage === 0);
+        if (nextBtn) nextBtn.disabled = (!data || data.length < PAGE_SIZE);
 
         if (!data || data.length === 0) {
             listBody.innerHTML = `<tr><td colspan="5" class="text-center">No actors registered yet.</td></tr>`;
