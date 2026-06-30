@@ -582,14 +582,38 @@ async function loadContents() { await loadMovies(); await loadSeries(); }
 
 async function toggleContentFeatured(id, val) {
     const newVal = val === 1 ? 0 : 1;
-    await _supabase.from('contents').update({ is_featured: newVal }).eq('id', id);
-    loadContents();
+    const inputEl = document.getElementById(`feat-${id}`);
+    if (inputEl) {
+        inputEl.setAttribute('onchange', `toggleContentFeatured(${id}, ${newVal})`);
+    }
+    try {
+        const { error } = await _supabase.from('contents').update({ is_featured: newVal }).eq('id', id);
+        if (error) throw error;
+    } catch (e) {
+        if (inputEl) {
+            inputEl.checked = (val === 1);
+            inputEl.setAttribute('onchange', `toggleContentFeatured(${id}, ${val})`);
+        }
+        toastError('Failed to update: ' + e.message);
+    }
 }
 
 async function toggleContentShow(id, val) {
     const newVal = val === 1 ? 0 : 1;
-    await _supabase.from('contents').update({ is_show: newVal }).eq('id', id);
-    loadContents();
+    const inputEl = document.getElementById(`show-${id}`);
+    if (inputEl) {
+        inputEl.setAttribute('onchange', `toggleContentShow(${id}, ${newVal})`);
+    }
+    try {
+        const { error } = await _supabase.from('contents').update({ is_show: newVal }).eq('id', id);
+        if (error) throw error;
+    } catch (e) {
+        if (inputEl) {
+            inputEl.checked = (val === 1);
+            inputEl.setAttribute('onchange', `toggleContentShow(${id}, ${val})`);
+        }
+        toastError('Failed to update: ' + e.message);
+    }
 }
 
 function getGenresCheckboxes(selectedIds = []) {
@@ -2576,8 +2600,20 @@ async function loadCustomAds() {
 
 async function toggleAdStatus(id, val) {
     const newVal = val === 1 ? 0 : 1;
-    await _supabase.from('custom_ads').update({ status: newVal }).eq('id', id);
-    loadCustomAds();
+    const inputEl = document.getElementById(`adSwitch-${id}`);
+    if (inputEl) {
+        inputEl.setAttribute('onchange', `toggleAdStatus(${id}, ${newVal})`);
+    }
+    try {
+        const { error } = await _supabase.from('custom_ads').update({ status: newVal }).eq('id', id);
+        if (error) throw error;
+    } catch (e) {
+        if (inputEl) {
+            inputEl.checked = (val === 1);
+            inputEl.setAttribute('onchange', `toggleAdStatus(${id}, ${val})`);
+        }
+        toastError('Failed to update: ' + e.message);
+    }
 }
 
 function addCustomAdModal() {
