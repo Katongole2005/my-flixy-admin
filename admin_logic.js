@@ -1,8 +1,20 @@
-// Supabase Credentials
+﻿// Supabase Credentials
 const SUPABASE_URL = "https://izbnffyqvbbbggfzdibe.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6Ym5mZnlxdmJiYmdnZnpkaWJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMjA0MDMsImV4cCI6MjA5NzU5NjQwM30._xV3h067QE3pkSlWuGSCmt7ZmDIECkfxftwETuDMaCU";
 
 const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// â”€â”€ Toast Notification Helpers â”€â”€
+function toast(msg, type = 'success') {
+    if (window.iziToast) {
+        window.iziToast[type]({ message: msg, position: 'topRight', timeout: 3500 });
+    } else {
+        console.log(`[${type}] ${msg}`);
+    }
+}
+function toastSuccess(msg) { toast(msg, 'success'); }
+function toastError(msg) { toast(msg, 'error'); }
+function toastInfo(msg) { toast(msg, 'info'); }
 
 // State
 let currentTab = 'index';
@@ -39,6 +51,23 @@ function checkSession() {
         showDashboard();
     } else {
         showLogin();
+    }
+}
+
+// Sidebar hamburger toggle
+function toggleSidebar() {
+    const sidebar = document.querySelector('.main-sidebar');
+    const mainContent = document.querySelector('.main-content');
+    const navbar = document.querySelector('.navbar');
+    if (!sidebar) return;
+    if (sidebar.style.left === '-270px' || getComputedStyle(sidebar).left === '-270px') {
+        sidebar.style.left = '0';
+        if (mainContent) mainContent.style.paddingLeft = '295px';
+        if (navbar) navbar.style.left = '270px';
+    } else {
+        sidebar.style.left = '-270px';
+        if (mainContent) mainContent.style.paddingLeft = '30px';
+        if (navbar) navbar.style.left = '0';
     }
 }
 
@@ -81,6 +110,9 @@ function setupEventListeners() {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         loginError.textContent = '';
+        const btn = loginForm.querySelector('button[type="submit"]');
+        btn.textContent = 'Logging in...';
+        btn.disabled = true;
         const username = document.getElementById('user_name').value;
         const password = document.getElementById('user_password').value;
 
@@ -94,13 +126,23 @@ function setupEventListeners() {
 
             if (error || !data) {
                 loginError.textContent = 'Invalid username or password.';
+                btn.textContent = 'Log In';
+                btn.disabled = false;
             } else {
                 localStorage.setItem('flixy_admin_session', JSON.stringify(data));
                 showDashboard();
             }
         } catch (err) {
             loginError.textContent = 'Connection error. Please try again.';
+            btn.textContent = 'Log In';
+            btn.disabled = false;
         }
+    });
+
+    // Sidebar hamburger
+    document.addEventListener('click', (e) => {
+        const collapseBtn = e.target.closest('.collapse-btn');
+        if (collapseBtn) { e.preventDefault(); toggleSidebar(); }
     });
 
     // Logout
@@ -112,7 +154,7 @@ function setupEventListeners() {
         });
     }
 
-    // Sidebar tab routing — use .activeLi (matches original CSS)
+    // Sidebar tab routing â€” use .activeLi (matches original CSS)
     document.querySelectorAll('.sidebar-menu li[data-tab]').forEach(li => {
         li.addEventListener('click', (e) => {
             e.preventDefault();
@@ -553,7 +595,7 @@ function showAddContentModal() {
             hideModal();
             loadContents();
         } catch (err) {
-            alert('Error adding content: ' + err.message);
+            toastError('Error adding content: ' + err.message);
             submitBtn.disabled = false;
             submitBtn.textContent = 'Save Content';
         }
@@ -674,7 +716,7 @@ async function showEditContentModal(id) {
             hideModal();
             loadContents();
         } catch (err) {
-            alert('Error updating content: ' + err.message);
+            toastError('Error updating content: ' + err.message);
             submitBtn.disabled = false;
             submitBtn.textContent = 'Update Content';
         }
@@ -704,7 +746,7 @@ async function deleteContent(id) {
         await _supabase.from('contents').delete().eq('id', id);
         loadContents();
     } catch (e) {
-        alert('Error: ' + e.message);
+        toastError('Error: ' + e.message);
     }
 }
 
@@ -785,7 +827,7 @@ async function manageMovieSources(contentId, movieTitle) {
             if (error) throw error;
             manageMovieSources(contentId, movieTitle);
         } catch (err) {
-            alert('Error adding source: ' + err.message);
+            toastError('Error adding source: ' + err.message);
         }
     });
 }
@@ -859,7 +901,7 @@ async function manageMovieSubtitles(contentId, movieTitle) {
             if (error) throw error;
             manageMovieSubtitles(contentId, movieTitle);
         } catch (err) {
-            alert('Error adding subtitle: ' + err.message);
+            toastError('Error adding subtitle: ' + err.message);
         }
     });
 }
@@ -931,7 +973,7 @@ async function manageMovieCast(contentId, movieTitle) {
             if (error) throw error;
             manageMovieCast(contentId, movieTitle);
         } catch (err) {
-            alert('Error adding cast member: ' + err.message);
+            toastError('Error adding cast member: ' + err.message);
         }
     });
 }
@@ -1068,7 +1110,7 @@ function addSeasonModal(contentId, seriesTitle) {
             showModal(parentModalTitle, parentModalBody);
             manageSeasons(contentId, seriesTitle);
         } catch (err) {
-            alert('Error: ' + err.message);
+            toastError('Error: ' + err.message);
         }
     });
 }
@@ -1087,7 +1129,7 @@ async function deleteSeason(seasonId, contentId, seriesTitle) {
         await _supabase.from('seasons').delete().eq('id', seasonId);
         manageSeasons(contentId, seriesTitle);
     } catch (e) {
-        alert('Error: ' + e.message);
+        toastError('Error: ' + e.message);
     }
 }
 
@@ -1154,7 +1196,7 @@ function addEpisodeModal(seasonId, contentId, seriesTitle) {
             showModal(parentModalTitle, parentModalBody);
             manageSeasons(contentId, seriesTitle);
         } catch (err) {
-            alert('Error: ' + err.message);
+            toastError('Error: ' + err.message);
             submitBtn.disabled = false;
         }
     });
@@ -1243,7 +1285,7 @@ async function manageEpisodeSources(episodeId, epTitle) {
             if (error) throw error;
             manageEpisodeSources(episodeId, epTitle);
         } catch (err) {
-            alert('Error adding source: ' + err.message);
+            toastError('Error adding source: ' + err.message);
         }
     });
 }
@@ -1314,7 +1356,7 @@ async function manageEpisodeSubtitles(episodeId, epTitle) {
             if (error) throw error;
             manageEpisodeSubtitles(episodeId, epTitle);
         } catch (err) {
-            alert('Error adding subtitle: ' + err.message);
+            toastError('Error adding subtitle: ' + err.message);
         }
     });
 }
@@ -1459,7 +1501,7 @@ async function addTopContentModal() {
             hideModal();
             loadTopContents();
         } catch (err) {
-            alert('Error: ' + err.message);
+            toastError('Error: ' + err.message);
         }
     });
 }
@@ -1556,7 +1598,7 @@ function addActorModal() {
             loadActors();
             loadGlobalCache();
         } catch (err) {
-            alert('Error adding actor: ' + err.message);
+            toastError('Error adding actor: ' + err.message);
             submitBtn.disabled = false;
         }
     });
@@ -1614,7 +1656,7 @@ async function editActorModal(id) {
             loadActors();
             loadGlobalCache();
         } catch (err) {
-            alert('Error updating actor: ' + err.message);
+            toastError('Error updating actor: ' + err.message);
             submitBtn.disabled = false;
         }
     });
@@ -1910,7 +1952,7 @@ function addTVCategoryModal() {
             hideModal();
             loadTVCategories();
         } catch (err) {
-            alert('Error adding category: ' + err.message);
+            toastError('Error adding category: ' + err.message);
             submitBtn.disabled = false;
         }
     });
@@ -1954,7 +1996,7 @@ async function editTVCategoryModal(id) {
             hideModal();
             loadTVCategories();
         } catch (err) {
-            alert('Error updating category: ' + err.message);
+            toastError('Error updating category: ' + err.message);
             submitBtn.disabled = false;
         }
     });
@@ -2097,7 +2139,7 @@ async function addTVChannelModal() {
             hideModal();
             loadTVChannels();
         } catch (err) {
-            alert('Error adding TV channel: ' + err.message);
+            toastError('Error adding TV channel: ' + err.message);
             submitBtn.disabled = false;
         }
     });
@@ -2193,7 +2235,7 @@ async function editTVChannelModal(id) {
             hideModal();
             loadTVChannels();
         } catch (err) {
-            alert('Error updating TV channel: ' + err.message);
+            toastError('Error updating TV channel: ' + err.message);
             submitBtn.disabled = false;
         }
     });
@@ -2271,11 +2313,11 @@ function addNotificationModal() {
             if (error) throw error;
             
             // Note: In production, you would trigger OneSignal/FCM api endpoints to dispatch.
-            alert('Notification saved successfully in history database logs.');
+            toastSuccess('Notification saved successfully!');
             hideModal();
             loadNotifications();
         } catch (err) {
-            alert('Error: ' + err.message);
+            toastError('Error: ' + err.message);
             submitBtn.disabled = false;
         }
     });
@@ -2339,9 +2381,9 @@ async function saveAdmobConfig(e, id) {
         };
         const { error } = await _supabase.from('admob').update(updateData).eq('id', id);
         if (error) throw error;
-        alert('Admob configuration saved successfully!');
+        toastSuccess('Admob configuration saved!');
     } catch (err) {
-        alert('Error: ' + err.message);
+        toastError('Error: ' + err.message);
     } finally {
         btn.disabled = false;
     }
@@ -2493,7 +2535,7 @@ function addCustomAdModal() {
             hideModal();
             loadCustomAds();
         } catch (err) {
-            alert('Error adding campaign: ' + err.message);
+            toastError('Error adding campaign: ' + err.message);
             submitBtn.disabled = false;
         }
     });
@@ -2584,7 +2626,7 @@ async function editAdModal(id) {
             hideModal();
             loadCustomAds();
         } catch (err) {
-            alert('Error updating campaign: ' + err.message);
+            toastError('Error updating campaign: ' + err.message);
             submitBtn.disabled = false;
         }
     });
@@ -2674,7 +2716,7 @@ async function manageAdMediaSources(adCampaignId, campaignTitle) {
             if (error) throw error;
             manageAdMediaSources(adCampaignId, campaignTitle);
         } catch (err) {
-            alert('Error adding asset: ' + err.message);
+            toastError('Error adding asset: ' + err.message);
         }
     });
 }
@@ -2719,9 +2761,9 @@ async function loadSettings() {
                 };
                 const { error: errUp } = await _supabase.from('global_settings').update(updateData).eq('id', 1);
                 if (errUp) throw errUp;
-                alert('Global configuration saved successfully!');
+                toastSuccess('Settings saved successfully!');
             } catch (err) {
-                alert('Error: ' + err.message);
+                toastError('Error: ' + err.message);
             } finally {
                 btn.disabled = false;
             }
@@ -2752,9 +2794,9 @@ async function loadPrivacyPolicy() {
                     updated_at: new Date().toISOString()
                 }).eq('id', 1);
                 if (errUp) throw errUp;
-                alert('Privacy Policy saved successfully!');
+                toastSuccess('Privacy Policy saved!');
             } catch (err) {
-                alert('Error: ' + err.message);
+                toastError('Error: ' + err.message);
             } finally {
                 btn.disabled = false;
             }
@@ -2782,9 +2824,9 @@ async function loadTermsOfUse() {
                     updated_at: new Date().toISOString()
                 }).eq('id', 1);
                 if (errUp) throw errUp;
-                alert('Terms of Use saved successfully!');
+                toastSuccess('Terms of Use saved!');
             } catch (err) {
-                alert('Error: ' + err.message);
+                toastError('Error: ' + err.message);
             } finally {
                 btn.disabled = false;
             }
@@ -2806,3 +2848,4 @@ function escapeHtml(text) {
     };
     return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
 }
+

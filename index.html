@@ -7,12 +7,13 @@
     <link rel='shortcut icon' type='image/x-icon' href="assets/img/favicon.png" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="assets/css/iziToast.css" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css" />
     <link rel="stylesheet" href="assets/css/flatpickr.min.css" type="text/css" />
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
     <style>
         /* SPA tab visibility */
         .tab-section { display: none; }
@@ -23,7 +24,7 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.75);
             z-index: 9999;
             overflow-y: auto;
         }
@@ -33,7 +34,7 @@
             border: 1px solid var(--border-color);
             border-radius: var(--border-radius);
             width: 100%;
-            max-width: 820px;
+            max-width: 860px;
             animation: slideDown 0.25s ease-out;
         }
         .flixy-modal-header {
@@ -55,9 +56,52 @@
             transform: translateY(-50%);
             border-radius: 0 10px 10px 0;
         }
-        .flixy-modal-body { padding: 25px; max-height: 70vh; overflow-y: auto; }
+        .flixy-modal-body { padding: 25px; max-height: 72vh; overflow-y: auto; }
         .flixy-modal-close { background: none; border: none; color: #fff; font-size: 1.6rem; cursor: pointer; line-height: 1; }
         @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Dark theme overrides for form elements inside modals */
+        .flixy-modal-body .form-control,
+        .flixy-modal-body select.form-control,
+        .flixy-modal-body textarea.form-control {
+            background-color: #1a1a2e;
+            border: 1px solid var(--border-color);
+            color: #fff;
+        }
+        .flixy-modal-body .form-control:focus,
+        .flixy-modal-body select.form-control:focus {
+            background-color: #2a2a42;
+            border-color: var(--theme-color);
+            color: #fff;
+        }
+        .flixy-modal-body label { color: #afafaf; }
+        .flixy-modal-body .form-check-input { cursor: pointer; }
+        .flixy-modal-body .list-group-item {
+            background-color: #1a1a2e;
+            border-color: var(--border-color);
+            color: #fff;
+        }
+        .flixy-modal-body .card-body {
+            background-color: transparent;
+        }
+        /* Dark checkboxes */
+        .flixy-modal-body .custom-control-label { color: #fff; }
+        .flixy-modal-body .custom-control-input:checked ~ .custom-control-label::before {
+            background-color: var(--theme-color);
+            border-color: var(--theme-color);
+        }
+        /* Nav tabs in modal */
+        .flixy-modal-body .nav-tabs { border-bottom-color: var(--border-color); }
+        .flixy-modal-body .nav-tabs .nav-link { color: #aaa; border: none; border-bottom: 2px solid transparent; }
+        .flixy-modal-body .nav-tabs .nav-link.active { color: var(--theme-color); border-bottom-color: var(--theme-color); background: transparent; }
+
+        /* Badge colors */
+        .badge-primary { background-color: var(--theme-color); color: #fff; }
+        .badge-info { background-color: #17a2b8; color: #fff; }
+        .badge-warning { background-color: #ffc107; color: #000; }
+        .badge-success { background-color: #28a745; color: #fff; }
+        .badge-danger { background-color: #dc3545; color: #fff; }
+        .badge { display: inline-block; padding: 0.3em 0.65em; font-size: .75em; font-weight: 700; border-radius: 0.375rem; }
 
         /* Dashboard section header */
         .section-header {
@@ -86,6 +130,38 @@
             color: #fff !important; 
             border-radius: var(--border-radius); 
         }
+
+        /* Dropdown menu dark */
+        .dropdown-menu {
+            background: var(--theme-dark);
+            border: 1px solid var(--border-color);
+        }
+        .dropdown-menu .dropdown-item { color: #fff; }
+        .dropdown-menu .dropdown-item:hover { background: var(--border-color); color: #fff; }
+        .dropdown-menu.show { display: block; }
+
+        /* Table fix */
+        .table-responsive { overflow-x: auto; }
+        table.table th { white-space: nowrap; }
+
+        /* btn-xs */
+        .btn-xs { padding: 2px 8px; font-size: 0.75rem; }
+
+        /* form-check switch */
+        .form-check.form-switch .form-check-input:checked { background-color: var(--theme-color); border-color: var(--theme-color); }
+
+        /* File input dark */
+        .form-control-file, input[type="file"].form-control {
+            color: #aaa;
+            background: var(--border-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 6px 12px;
+            width: 100%;
+        }
+
+        /* Transition for sidebar toggle */
+        .main-sidebar, .main-content, .navbar { transition: left 0.3s ease, padding-left 0.3s ease; }
     </style>
 </head>
 <body>
@@ -734,6 +810,60 @@
 <script src="assets/js/bootstrap.min.js"></script>
 <script src="assets/js/app.js"></script>
 <script src="assets/js/custom.js"></script>
+<script>
+// ─── Bootstrap 4 Dropdown Toggle (plain JS, no extra lib needed) ───
+document.addEventListener('click', function(e) {
+    // Dropdown toggle
+    const toggleEl = e.target.closest('[data-toggle="dropdown"]');
+    if (toggleEl) {
+        e.preventDefault();
+        e.stopPropagation();
+        const menu = toggleEl.closest('.dropdown')?.querySelector('.dropdown-menu');
+        if (!menu) return;
+        const isOpen = menu.classList.contains('show');
+        // Close all open dropdowns first
+        document.querySelectorAll('.dropdown-menu.show').forEach(m => m.classList.remove('show'));
+        if (!isOpen) menu.classList.add('show');
+        return;
+    }
+    // Close dropdowns when clicking outside
+    if (!e.target.closest('.dropdown')) {
+        document.querySelectorAll('.dropdown-menu.show').forEach(m => m.classList.remove('show'));
+    }
+});
+
+// ─── Bootstrap 4 nav-tab toggle inside modal ───
+document.addEventListener('click', function(e) {
+    const tabLink = e.target.closest('[data-toggle="tab"]');
+    if (!tabLink) return;
+    e.preventDefault();
+    const targetSelector = tabLink.getAttribute('href') || tabLink.getAttribute('data-target');
+    if (!targetSelector) return;
+
+    // Remove active from siblings
+    const parentUl = tabLink.closest('ul.nav-tabs');
+    if (parentUl) {
+        parentUl.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        tabLink.classList.add('active');
+    }
+
+    // Show target tab pane
+    const parentContent = tabLink.closest('.flixy-modal-body') || document;
+    parentContent.querySelectorAll('.tab-pane').forEach(p => {
+        p.classList.remove('show', 'active');
+    });
+    const targetPane = document.querySelector(targetSelector);
+    if (targetPane) targetPane.classList.add('show', 'active');
+});
+
+// ─── Re-run feather icons after any modal opens ───
+const _origShowModal = window.showModal;
+// Will be overridden in admin_logic.js – use MutationObserver instead
+const _featherObserver = new MutationObserver(() => {
+    if (window.feather) window.feather.replace();
+});
+_featherObserver.observe(document.body, { childList: true, subtree: true });
+</script>
 <script src="admin_logic.js"></script>
 </body>
 </html>
